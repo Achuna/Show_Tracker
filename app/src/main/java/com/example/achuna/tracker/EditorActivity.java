@@ -447,7 +447,9 @@ public class EditorActivity extends Activity {
 
         long diff = now.getTimeInMillis() - calendar.getTimeInMillis();
         if (diff > 0) {
-            calendar.add(Calendar.DAY_OF_WEEK, 7);
+            calendar.add(Calendar.DAY_OF_WEEK, 7); //Try using 1 if this acts up
+
+
             // Toast.makeText(getApplicationContext(), "Item: " + list.indexOf(show) + " \nAdded Week", Toast.LENGTH_SHORT).show();
         }
 
@@ -458,7 +460,7 @@ public class EditorActivity extends Activity {
 //        }
 
         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), weeklyInterval, pendingIntent);
-        Toast.makeText(getApplicationContext(), "Item: " + MainActivity.list.indexOf(show) + "\nDay: "+show.getTime().getDay() + " Hour: "+show.getTime().getHour()+"", Toast.LENGTH_LONG).show();
+        //Toast.makeText(getApplicationContext(), "Item: " + MainActivity.list.indexOf(show) + "\nDay: "+show.getTime().getDay() + " Hour: "+show.getTime().getHour()+"", Toast.LENGTH_LONG).show();
         // alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
 
     }
