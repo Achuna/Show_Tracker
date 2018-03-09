@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.achuna.tracker.EditorActivity">
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="12dp"
+        android:text="Information"
+        android:textSize="23sp" />
+
+    <EditText
+        android:id="@+id/showNameEt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/dayList"
+        android:layout_below="@+id/textView2"
+        android:layout_marginTop="55dp"
+        android:ems="15"
+        android:hint="Name of Show"
+        android:inputType="textPersonName" />
+
+    <EditText
+        android:id="@+id/showNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/showNameEt"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:ems="15"
+        android:hint="Episode Number"
+        android:inputType="number" />
+
+    <CheckBox
+        android:id="@+id/notifyCheckbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/urlText"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="14dp"
+        android:text="Get Notifiactions" />
+
+    <TextView
+        android:id="@+id/notificationTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:layout_below="@+id/notifyCheckbox"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp" />
+
+    <Button
+        android:id="@+id/deleteButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/planToWatchButton"
+        android:layout_alignBottom="@+id/planToWatchButton"
+        android:layout_toStartOf="@+id/notifyCheckbox"
+        android:background="@android:color/transparent"
+        android:drawableBottom="@drawable/delete_icon_black"
+        android:text="Delete\n"
+        android:textSize="10sp"
+        android:windowSoftInputMode="adjustNothing"
+        android:visibility="invisible" />
+
+    <Button
+        android:id="@+id/doneButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/deleteButton"
+        android:layout_alignBottom="@+id/deleteButton"
+        android:layout_toEndOf="@+id/notifyCheckbox"
+        android:background="@android:color/transparent"
+        android:drawableBottom="@drawable/check_black"
+        android:text="Mark As Done\n"
+        android:textSize="10sp"
+        android:windowSoftInputMode="adjustNothing"
+        android:visibility="invisible" />
+
+    <Button
+        android:id="@+id/editorSaveBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="26dp"
+        android:windowSoftInputMode="adjustNothing"
+        android:text="Save" />
+
+    <EditText
+        android:id="@+id/urlText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/showNameEt"
+        android:layout_below="@+id/showNumber"
+        android:layout_marginTop="29dp"
+        android:ems="15"
+        android:hint="URL (Optional, Must contain 'https://')"
+        android:inputType="textPersonName"
+        android:selectAllOnFocus="false"
+        android:singleLine="true" />
+
+    <Button
+        android:id="@+id/planToWatchButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/editorSaveBtn"
+        android:layout_alignStart="@+id/editorSaveBtn"
+        android:layout_marginBottom="9dp"
+        android:background="@android:color/transparent"
+        android:drawableBottom="@drawable/lightbulb_outline_black"
+        android:text="Watch Later\n"
+        android:textSize="10sp"
+        android:visibility="invisible"
+        android:windowSoftInputMode="adjustNothing" />
+
+    <ListView
+        android:id="@+id/dayList"
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:layout_alignStart="@+id/deleteButton"
+        android:layout_below="@+id/notificationTime"
+        android:layout_marginTop="25dp"
+        android:divider="@android:color/transparent"
+        android:isScrollContainer="false"
+        android:visibility="invisible"
+        android:windowSoftInputMode="adjustNothing" />
+
+    <ListView
+        android:id="@+id/timeList"
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:isScrollContainer="false"
+        android:layout_alignEnd="@+id/showNameEt"
+        android:layout_alignTop="@+id/dayList"
+        android:divider="@android:color/transparent"
+        android:windowSoftInputMode="adjustNothing"
+        android:visibility="invisible" />
+
+    <Button
+        android:id="@+id/watchNow"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/textView2"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:text="Watch Now"
+        android:textSize="10sp" />
+
+</RelativeLayout>

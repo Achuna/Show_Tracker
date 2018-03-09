@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="white">#ffffff</color>
+    <color name="black">#000000</color>
+
+    <color name="bluePrimary">#006aff</color>
+    <color name="bluePrimaryDark">#3F51B5</color>
+    <color name="blueAccent">#006aff</color>
+
+    <color name="darkBluePrimary">#1e2756</color>
+    <color name="darkBluePrimaryDark">#2b2b2b</color>
+    <color name="darkBlueAccent">#7fbbff</color>
+
+
+    <color name="yellowPrimary">#FFEB3B</color>
+    <color name="yellowPrimaryDark">#FDD835</color>
+    <color name="yellowAccent">#ffea00</color>
+
+    <color name="darkYellowPrimary">#fff41f</color>
+    <color name="darkYellowPrimaryDark">#bfb600</color>
+    <color name="darkYellowAccent">#ffe367</color>
+
+
+    <color name="redPrimary">#ff3e3b</color>
+    <color name="redPrimaryDark">#b92523</color>
+    <color name="redAccent">#ff6d67</color>
+
+    <color name="darkRedPrimary">#740600</color>
+    <color name="darkRedPrimaryDark">#391414</color>
+    <color name="darkRedAccent">#ff4747</color>
+
+    <color name="greenPrimary">#40e404</color>
+    <color name="greenPrimaryDark">#1d9c00</color>
+    <color name="greenAccent">#67ff79</color>
+
+    <color name="darkGreenPrimary">#137400</color>
+    <color name="darkGreenPrimaryDark">#143916</color>
+    <color name="darkGreenAccent">#47ff47</color>
+
+    <color name="orangePrimary">#ffb300</color>
+    <color name="orangePrimaryDark">#b5983f</color>
+    <color name="orangeAccent">#ffae00</color>
+
+    <color name="darkOrangePrimary">#56481e</color>
+    <color name="darkOrangePrimaryDark">#64512f</color>
+    <color name="darkOrangeAccent">#ffcc7f</color>
+
+    <color name="purplePrimary">#9000ff</color>
+    <color name="purplePrimaryDark">#863fb5</color>
+    <color name="purpleAccent">#9d00ff</color>
+
+    <color name="darkPurplePrimary">#401e56</color>
+    <color name="darkPurplePrimaryDark">#2b2b2b</color>
+    <color name="darkPurpleAccent">#c87fff</color>
+
+</resources>
+

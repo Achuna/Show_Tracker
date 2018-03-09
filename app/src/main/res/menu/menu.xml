@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menuKeep"
+        android:title="Open Google Keep"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/google_keep_icon"
+        />
+
+    <item
+        android:id="@+id/menuDone"
+        android:title="Finished Shows"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/menuPlan"
+        android:title="Watch Later"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/menuSettings"
+        android:title="Settings"
+        app:showAsAction="never"
+        />
+
+</menu>

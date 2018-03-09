@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:descendantFocusability="blocksDescendants">
+
+    <TextView
+        android:id="@+id/listAdapterShowName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignTop="@+id/listAdapterNumber"
+        android:layout_marginStart="24dp"
+        android:width="140dp"
+        android:singleLine="false"
+        android:text="TextView"
+        android:textColor="#000000"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/listAdapterNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/addButton"
+        android:layout_marginEnd="30dp"
+        android:layout_toStartOf="@+id/addButton"
+        android:maxLength="4"
+        android:text="TextView"
+        android:textColor="#000000"
+        android:textSize="22sp" />
+
+    <ImageButton
+        android:id="@+id/addButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_toStartOf="@+id/minusButton"
+        android:tooltipText="Increment"
+        android:background="@android:color/transparent"
+        app:srcCompat="@drawable/episode_add_image" />
+
+    <ImageButton
+        android:id="@+id/minusButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignTop="@+id/addButton"
+        android:layout_marginEnd="24dp"
+        android:tooltipText="Decrement"
+        android:background="@android:color/transparent"
+        app:srcCompat="@drawable/episode_minus_image" />
+
+
+</RelativeLayout>

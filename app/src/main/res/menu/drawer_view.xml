@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/drawerAlarm"
+            android:icon="@drawable/alarm_icon"
+            android:title="Reset Alarms" />
+
+        <item
+            android:id="@+id/drawerFinished"
+            android:icon="@drawable/check_black"
+            android:title="Finished Shows" />
+
+        <item
+            android:id="@+id/drawerWatchLater"
+            android:icon="@drawable/lightbulb_outline_black"
+            android:title="Watch Later" />
+        <item
+            android:id="@+id/drawerSettings"
+            android:icon="@drawable/settings_black"
+            android:title="Settings" />
+
+        <item
+            android:id="@+id/drawerKeep"
+            android:icon="@drawable/google_keep_icon"
+            android:title="Open Google Keep" />
+    </group>
+</menu>
