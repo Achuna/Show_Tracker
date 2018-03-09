@@ -52,8 +52,10 @@ public class NotificationReceiver extends BroadcastReceiver {
 
         //For Personal Use
         //https://otakustream.tv/anime/dragon-ball-super/episode-129/
-        String specificUrl = url + (number + 1) + "/";
-
+        String specificUrl = url;
+        if(url.toLowerCase().contains("anime")) {
+             specificUrl = url + (number + 1) + "/";
+        }
         stream.putExtra("url", specificUrl); //change to specificUrl to url on deployment
         stream.putExtra("index", listItem);
         PendingIntent watchIntent = PendingIntent.getActivity(context, id, stream, PendingIntent.FLAG_UPDATE_CURRENT);

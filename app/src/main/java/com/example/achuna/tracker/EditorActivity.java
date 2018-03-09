@@ -28,7 +28,7 @@ import java.util.Calendar;
 public class EditorActivity extends Activity {
 
     CheckBox notifyCheckbox;
-    TextView notificationTime;
+    TextView notificationTime, atText;
     EditText showName, episodeNumber, urlText;
     Button saveBtn, deleteBtn, doneBtn, laterBtn, watchNow;
     ListView dayList, timeList;
@@ -81,6 +81,7 @@ public class EditorActivity extends Activity {
 
         notifyCheckbox = findViewById(R.id.notifyCheckbox);
         notificationTime = findViewById(R.id.notificationTime);
+        atText = findViewById(R.id.atDivider);
         saveBtn = findViewById(R.id.editorSaveBtn);
         deleteBtn = findViewById(R.id.deleteButton);
         doneBtn = findViewById(R.id.doneButton);
@@ -130,6 +131,7 @@ public class EditorActivity extends Activity {
                 deleteBtn.setVisibility(View.INVISIBLE);
                 laterBtn.setVisibility(View.INVISIBLE);
                 watchNow.setVisibility(View.INVISIBLE);
+                atText.setVisibility(View.INVISIBLE);
             }
         }
 
@@ -163,10 +165,12 @@ public class EditorActivity extends Activity {
             notificationTime.setVisibility(View.VISIBLE);
             dayList.setVisibility(View.VISIBLE);
             timeList.setVisibility(View.VISIBLE);
+            atText.setVisibility(View.VISIBLE);
         } else {
             notificationTime.setVisibility(View.INVISIBLE);
             dayList.setVisibility(View.INVISIBLE);
             timeList.setVisibility(View.INVISIBLE);
+            atText.setVisibility(View.INVISIBLE);
         }
 
         deleteBtn.setOnClickListener(new View.OnClickListener() {
@@ -309,7 +313,11 @@ public class EditorActivity extends Activity {
 
                     if (urlText.getText().length() > 0) {
                         int episode = Integer.parseInt(episodeNumber.getText().toString());
-                        Intent stream = new Intent(Intent.ACTION_VIEW, Uri.parse(urlText.getText().toString() + (episode) + "/" ));
+                        String specificUrl = urlText.getText().toString();
+                        if(urlText.getText().toString().toLowerCase().contains("anime")) {
+                            specificUrl = urlText.getText().toString()  + (episode + 1) + "/";
+                        }
+                        Intent stream = new Intent(Intent.ACTION_VIEW, Uri.parse(specificUrl));
                         try {
                             startActivity(stream);
                         } catch (Exception e) {
@@ -389,10 +397,12 @@ public class EditorActivity extends Activity {
                     notificationTime.setVisibility(View.VISIBLE);
                     dayList.setVisibility(View.VISIBLE);
                     timeList.setVisibility(View.VISIBLE);
+                    atText.setVisibility(View.VISIBLE);
                 } else {
                     notificationTime.setVisibility(View.INVISIBLE);
                     dayList.setVisibility(View.INVISIBLE);
                     timeList.setVisibility(View.INVISIBLE);
+                    atText.setVisibility(View.INVISIBLE);
                 }
 
             }

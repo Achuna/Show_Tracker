@@ -122,11 +122,11 @@
 
     <ListView
         android:id="@+id/dayList"
-        android:layout_width="150dp"
+        android:layout_width="130dp"
         android:layout_height="50dp"
-        android:layout_alignStart="@+id/deleteButton"
+        android:layout_alignStart="@+id/showNumber"
         android:layout_below="@+id/notificationTime"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="24dp"
         android:divider="@android:color/transparent"
         android:isScrollContainer="false"
         android:visibility="invisible"
@@ -134,7 +134,7 @@
 
     <ListView
         android:id="@+id/timeList"
-        android:layout_width="150dp"
+        android:layout_width="120dp"
         android:layout_height="50dp"
         android:isScrollContainer="false"
         android:layout_alignEnd="@+id/showNameEt"
@@ -152,5 +152,16 @@
         android:layout_marginTop="8dp"
         android:text="Watch Now"
         android:textSize="10sp" />
+
+    <TextView
+        android:id="@+id/atDivider"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/dayList"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="12dp"
+        android:text="At"
+        android:textSize="18sp"
+        android:visibility="invisible" />
 
 </RelativeLayout>
