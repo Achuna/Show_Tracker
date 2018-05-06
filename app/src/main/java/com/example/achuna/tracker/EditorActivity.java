@@ -279,7 +279,6 @@ public class EditorActivity extends Activity {
                                     MainActivity.list.add(newShow);
                                     int newIndex = MainActivity.list.indexOf(newShow);
 
-
                                     if(newShow.notifications) {
                                         setAlarm(MainActivity.list.get(newIndex));
                                     } else {
