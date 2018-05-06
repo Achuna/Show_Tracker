@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -60,6 +61,13 @@ public class Planning extends AppCompatActivity {
 
         MainActivity.planList = loadPlanData();
 
+        Log.i("Done", MainActivity.planList.size() + "");
+
+
+        for (int i = 0; i < MainActivity.planList.size(); i++) {
+            Log.i("Done", MainActivity.planList.get(i).getName());
+        }
+
         watchList = findViewById(R.id.planList);
         SimpleListAdapter adapter = new SimpleListAdapter(getApplicationContext(), MainActivity.planList, darkTheme);
         watchList.setAdapter(adapter);
@@ -110,11 +118,17 @@ public class Planning extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onStop() {
+        savePlanData();
+        super.onStop();
+    }
+
     private ArrayList<Episode> loadPlanData() {
         ArrayList<Episode> a = new ArrayList<>();
         SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
         Gson gson = new Gson();
-        String json = preferences.getString("List", null);
+        String json = preferences.getString("Plan List", null);
         Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
         a = gson.fromJson(json, type);
         if (a == null) a = new ArrayList<Episode>();
@@ -126,7 +140,7 @@ public class Planning extends AppCompatActivity {
         SharedPreferences.Editor editor = preferences.edit();
         Gson gson = new Gson();
         String json = gson.toJson(MainActivity.planList);
-        editor.putString("List", json);
+        editor.putString("Plan List", json);
         editor.apply();
     }
 }

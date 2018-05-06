@@ -2,10 +2,11 @@ package com.example.achuna.tracker;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -16,27 +17,39 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import static android.content.Context.ALARM_SERVICE;
-import static android.content.Context.MODE_PRIVATE;
-
 /**
- * Created by Achuna on 3/4/2018.
+ * Created by Achuna on 3/10/2018.
+ *
+ * Repeatedly Sets the alarm for each show
  */
 
-public class BootReceiver extends BroadcastReceiver {
+public class AlarmService extends Service {
+    private boolean isRunning;
+    private Context context;
+    private Thread backgroundThread;
+
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 
+    @Override
+    public void onCreate() {
+        this.context = this;
+        this.isRunning = false;
+        this.backgroundThread = new Thread(myTask);
 
+    }
 
-        if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED")) {
+    //This tasks will run in the background and set the alarms every 30 minutes
+    private Runnable myTask = new Runnable() {
+        public void run() {
 
             ArrayList<Episode> list = new ArrayList<>();
             SharedPreferences preferences = context.getSharedPreferences("Episode List", MODE_PRIVATE);
             Gson gson = new Gson();
             String json = preferences.getString("List", null);
-            Type type = new TypeToken<ArrayList<Episode>>() {
-            }.getType();
+            Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
             list = gson.fromJson(json, type);
             if (list == null) list = new ArrayList<Episode>();
 
@@ -74,14 +87,27 @@ public class BootReceiver extends BroadcastReceiver {
 
                     }
                 }
-                }
-            Intent startAlarmService = new Intent(context, AlarmService.class);
-            context.startService(startAlarmService);
-            Log.i("AService", "Started Alarm Service From Device Boot--------------------------------------------");
             }
 
+            Log.i("AService", "Alarm Service Ran ----------------------------------------------");
 
+            stopSelf();
+        }
+    };
 
-
+    @Override
+    public void onDestroy() {
+        this.isRunning = false;
     }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if(!this.isRunning) {
+            this.isRunning = true;
+            this.backgroundThread.start();
+        }
+        return START_STICKY;
+    }
+
 }
+

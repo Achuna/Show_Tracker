@@ -1,18 +1,22 @@
 package com.example.achuna.tracker;
 
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,6 +24,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -52,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     static ArrayList<Episode> planList = new ArrayList<>();
 
     static String toolbarTitle = "Tracker",listTitle ="Episode List",appColor ="Blue";
+    String streamUrl = "https://keep.google.com";
     static boolean darkTheme;
 
     @Override
@@ -132,6 +138,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
+
+        SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
+        streamUrl = streaming.getString("url", "https://keep.google.com");
+        
+        
         SharedPreferences settings = getSharedPreferences("Titles", MODE_PRIVATE);
         toolbarTitle = settings.getString("header", toolbarTitle);
         listTitle = settings.getString("list title", listTitle);
@@ -154,10 +165,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         title = findViewById(R.id.episodeMainTitle);
         title.setText(listTitle);
 
-        EpisodeListAdapter adapter = new EpisodeListAdapter(getApplicationContext(), loadListData(), darkTheme);
+        final EpisodeListAdapter adapter = new EpisodeListAdapter(getApplicationContext(), loadListData(), darkTheme);
+
+        //Preparing Lists
         list = loadListData();
+        doneList = loadDoneData();
+        planList = loadPlanData();
+
         episodeList.setAdapter(adapter);
 
+        scheduleAlarms();
 
         episodeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -184,8 +201,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onStop() {
+        for (int i = 0; i < list.size(); i++) {
+            if(list.get(i).notifications) {
+                setAlarm(list.get(i));
+            } else {
+                cancelAlarm(list.get(i));
+            }
+        }
 
         saveListData(list);
+        saveDoneData();
+        saveLaterData();
+
+        SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
+        SharedPreferences.Editor urlEditor = streaming.edit();
+        urlEditor.putString("url", streamUrl);
+        urlEditor.apply();
+
         super.onStop();
     }
 
@@ -202,51 +234,48 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         alarmManager.cancel(pendingIntent);
     }
 
+    public void scheduleAlarms() {
+        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        Intent scheduleAlarms = new Intent(getApplicationContext(), ScheduleReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, scheduleAlarms, 0);
+        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(), 1000*60*30, pendingIntent);
+    }
+
     public void setAlarm(Episode show) {
 
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
         Calendar now = Calendar.getInstance();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(System.currentTimeMillis());
-        int hour = show.getTime().getHour();
-        calendar.set(Calendar.HOUR_OF_DAY, 19);
-        //Toast.makeText(getApplicationContext(), "Item: " + list.indexOf(show) + "\nDay: "+show.getTime().getDay() + " Hour: "+show.getTime().getHour()+"", Toast.LENGTH_LONG).show();
-        calendar.set(Calendar.MINUTE, 50);
+
+        calendar.set(Calendar.HOUR_OF_DAY, show.getTime().getHour());
+        calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
-        //calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.DAY_OF_WEEK, show.getTime().getDay());
 
         Intent intent = new Intent(getApplicationContext(), NotificationReceiver.class);
         intent.putExtra("showName", show.getName());
         intent.putExtra("showNumber", show.getNumber());
         intent.putExtra("showUrl", show.getUrl());
-        intent.putExtra("showIndex", list.indexOf(show));
+        intent.putExtra("showIndex", MainActivity.list.indexOf(show));
         intent.putExtra("id", show.getId());
 
         long weeklyInterval = 1000 * 60 * 60 * 24 * 7;
-        //long interval = 1000 * 10;
-
         long diff = now.getTimeInMillis() - calendar.getTimeInMillis();
-        if (diff > 0) {
-            calendar.add(Calendar.DAY_OF_WEEK, 7);
-            // Toast.makeText(getApplicationContext(), "Item: " + list.indexOf(show) + " \nAdded Week", Toast.LENGTH_SHORT).show();
-        }
-
-
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), show.getId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        if (pendingIntent == null) {
-            Toast.makeText(getApplicationContext(), "Notification", Toast.LENGTH_SHORT).show();
+        if (diff > 0) {
+            alarmManager.cancel(pendingIntent);
+            //calendar.add(Calendar.DAY_OF_YEAR, 1); //Avoid firing when save button is clicked
+        } else {
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), weeklyInterval, pendingIntent);
+            //Toast.makeText(getApplicationContext(), "Item: " + MainActivity.list.indexOf(show) + "\nDay: "+show.getTime().getDay() + " Hour: "+show.getTime().getHour()+"", Toast.LENGTH_LONG).show();
+            // alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
         }
-
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), weeklyInterval, pendingIntent);
-        //Toast.makeText(getApplicationContext(), "Item: " + list.indexOf(show) + "\nDay: "+show.getTime().getDay() + " Hour: "+show.getTime().getHour()+"", Toast.LENGTH_LONG).show();
-
-
-       // alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-
     }
 
+
+    ////////////////////SAVING LIST DATA//////////////////////
 
     public void saveListData(ArrayList<Episode> a) {
         //Converting arraylist into json format
@@ -258,10 +287,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         editor.apply();
     }
 
+    private void saveDoneData() {
+        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(MainActivity.doneList);
+        editor.putString("Done List", json);
+        editor.apply();
+    }
+
+    private void saveLaterData() {
+        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(MainActivity.planList);
+        editor.putString("Plan List", json);
+        editor.apply();
+    }
+
+    /////////////////LOADING LIST DATA//////////////////////
+
     public ArrayList<Episode> loadListData() {
         ArrayList<Episode> a = new ArrayList<>();
         SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
-        Gson gson = new Gson();
+        Gson gson = new Gson(); //Using Gson library to make the list data into a string json text
         String json = preferences.getString("List", null);
         Type type = new TypeToken<ArrayList<Episode>>() {
         }.getType();
@@ -270,6 +319,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return a;
     }
 
+    public ArrayList<Episode> loadDoneData() {
+        ArrayList<Episode> a = new ArrayList<>();
+        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
+        Gson gson = new Gson();
+        String json = preferences.getString("Done List", null);
+        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
+        a = gson.fromJson(json, type);
+        if (a == null) a = new ArrayList<Episode>();
+        return a;
+    }
+
+    public ArrayList<Episode> loadPlanData() {
+        ArrayList<Episode> a = new ArrayList<>();
+        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
+        Gson gson = new Gson();
+        String json = preferences.getString("Plan List", null);
+        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
+        a = gson.fromJson(json, type);
+        if (a == null) a = new ArrayList<Episode>();
+        return a;
+    }
 
 
     @Override
@@ -279,12 +349,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    
+    
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
         if (sideBarToggle.onOptionsItemSelected(item))
             return true;
-
+        
         switch (item.getItemId()) {
             case R.id.menuSettings:
                 Intent settingsIntent = new Intent(getApplicationContext(), Settings.class);
@@ -295,27 +367,99 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 editor.apply();
                 startActivity(settingsIntent);
                 break;
-            case R.id.menuKeep:
-                //open keep
-                Intent openKeep = getPackageManager().getLaunchIntentForPackage("com.google.android.keep");
-                if (openKeep != null) {
-                    startActivity(openKeep);
+            case R.id.menuURLEditor:
+                //Open URL Editor
+
+                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Streaming Service");
+                if (darkTheme) {
+                    builder.setIcon(R.drawable.lightbulb_outline_white);
                 } else {
-                    Intent openBrowser = new Intent(Intent.ACTION_VIEW, Uri.parse("https://keep.google.com"));
-                    if (openBrowser != null) {
-                        startActivity(openBrowser);
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Unable to Open Keep", Toast.LENGTH_SHORT).show();
-                    }
+                    builder.setIcon(R.drawable.lightbulb_outline_black);
                 }
+                builder.setMessage("Enter the url of your favorite streaming service");
+
+                final EditText input = new EditText(MainActivity.this);
+                input.setInputType(InputType.TYPE_CLASS_TEXT);
+                input.setEms(10);
+                input.setHint("Enter URL Here");
+                input.setText(streamUrl);
+                builder.setView(input);
+
+                builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        if (input.getText().length() > 0) {
+                            streamUrl = input.getText().toString();
+                            SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
+                            SharedPreferences.Editor urlEditor = streaming.edit();
+                            urlEditor.putString("url", streamUrl);
+                            urlEditor.apply();
+                            dialogInterface.dismiss();
+                        } else {
+                            Toast.makeText(MainActivity.this, "URL NOT ENTERED", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
+                
                 break;
-            case R.id.menuDone:
-                Intent finishIntent = new Intent(getApplicationContext(), Done.class);
-                startActivity(finishIntent);
-                break;
-            case R.id.menuPlan:
-                Intent toWatchLater = new Intent(getApplicationContext(), Planning.class);
-                startActivity(toWatchLater);
+            case R.id.menuURL:
+                try {
+                    if(streamUrl.toLowerCase().contains("anime")) {
+                        try {
+                            Intent openMAL = getPackageManager().getLaunchIntentForPackage("net.myanimelist");
+                            startActivity(openMAL);
+                        } catch (Exception e) {
+                            Intent openStream = new Intent(Intent.ACTION_VIEW, Uri.parse(streamUrl));
+                            startActivity(openStream);
+                        }
+                    } else {
+                        Intent openStream = new Intent(Intent.ACTION_VIEW, Uri.parse(streamUrl));
+                        startActivity(openStream);
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Problem launching streaming url", Toast.LENGTH_SHORT).show();
+                    final AlertDialog.Builder builder2 = new AlertDialog.Builder(MainActivity.this);
+                    builder2.setTitle("Streaming Service");
+                    if (darkTheme) {
+                        builder2.setIcon(R.drawable.lightbulb_outline_white);
+                    } else {
+                        builder2.setIcon(R.drawable.lightbulb_outline_black);
+                    }
+                    builder2.setMessage("Enter the url of your favorite streaming service");
+
+
+                    //son of a b I hate
+                    final EditText input2 = new EditText(MainActivity.this);
+                    input2.setInputType(InputType.TYPE_CLASS_TEXT);
+                    input2.setEms(10);
+                    input2.setHint("Enter URL Here");
+                    input2.setText(streamUrl);
+                    builder2.setView(input2);
+
+                    builder2.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            if (input2.getText().length() > 0) {
+                                streamUrl = input2.getText().toString();
+                                SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
+                                SharedPreferences.Editor urlEditor = streaming.edit();
+                                urlEditor.putString("url", streamUrl);
+                                urlEditor.apply();
+                                dialogInterface.dismiss();
+                            } else {
+                                Toast.makeText(MainActivity.this, "URL NOT ENTERED", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+
+                    AlertDialog dialog2 = builder2.create();
+                    dialog2.show();
+                }
+
                 break;
         }
         return true;
@@ -337,40 +481,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.drawerKeep:
                 //open keep
                 sideBar.closeDrawers();
-                Intent openKeep = getPackageManager().getLaunchIntentForPackage("com.google.android.keep");
-                if (openKeep != null) {
-                    startActivity(openKeep);
-                } else {
+
                     Intent openBrowser = new Intent(Intent.ACTION_VIEW, Uri.parse("https://keep.google.com"));
                     if (openBrowser != null) {
-                        startActivity(openBrowser);
+                        try {
+                            startActivity(openBrowser);
+                        } catch (Exception e) {
+                            Toast.makeText(getApplicationContext(), "Unable to Open Keep", Toast.LENGTH_SHORT).show();
+                        }
                     } else {
                         Toast.makeText(getApplicationContext(), "Unable to Open Keep", Toast.LENGTH_SHORT).show();
                     }
-                }
                 break;
             case R.id.drawerFinished:
                 sideBar.closeDrawers();
                 Intent finishIntent = new Intent(getApplicationContext(), Done.class);
                 startActivity(finishIntent);
-                break;
-            case R.id.drawerAlarm:
-                //Set Appropriate Alarms
-                if (list.size() > 0) {
-                    for(int i = 0; i < list.size(); i++) {
-                        if (list.get(i).getNotifications()) {
-                            setAlarm(list.get(i));
-                        } else {
-                            cancelAlarm(list.get(i));
-                        }
-                    }
-                    Toast.makeText(getApplicationContext(), "Alarms Set", Toast.LENGTH_SHORT).show();
-                }
-                int size = navigationView.getMenu().size();
-                for (int i = 0; i < size; i++) {
-                    navigationView.getMenu().getItem(i).setChecked(false);
-                    sideBar.closeDrawers();
-                }
                 break;
             case R.id.drawerWatchLater:
                 sideBar.closeDrawers();

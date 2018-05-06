@@ -10,8 +10,10 @@ import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.webkit.URLUtil;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -30,16 +32,23 @@ public class NotificationReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        String name = intent.getExtras().getString("showName");
-        Log.i("Receiver", name);
-        int number = intent.getExtras().getInt("showNumber");
-        Log.i("Receiver", number+"");
-        String url = intent.getExtras().getString("showUrl");
-        Log.i("Receiver", url+"");
-        int listItem = intent.getExtras().getInt("showIndex");
-        Log.i("Receiver", listItem+"");
-        int id = intent.getExtras().getInt("id");
-        Log.i("Receiver", id+"");
+        Bundle extras = intent.getExtras();
+
+        String name = extras.getString("showName");
+       // Log.i("Receiver", name);
+        int number = extras.getInt("showNumber");
+       // Log.i("Receiver", number+"");
+        String url = extras.getString("showUrl");
+       // Log.i("Receiver", url+"");
+        int listItem = 0;
+        try {
+            listItem = extras.getInt("showIndex");
+            Log.i("Receiver", listItem + "");
+        } catch (Exception e) {
+            //Not need if device reboots
+        }
+        int id = extras.getInt("id");
+       // Log.i("Receiver", id+"");
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -48,16 +57,21 @@ public class NotificationReceiver extends BroadcastReceiver {
         PendingIntent pendingIntent = PendingIntent.getActivity(context, id, startMain, PendingIntent.FLAG_UPDATE_CURRENT);
 
 
-        Intent stream = new Intent(context, StreamActivity.class);
+
 
         //For Personal Use
         //https://otakustream.tv/anime/dragon-ball-super/episode-129/
         String specificUrl = url;
-        if(url.toLowerCase().contains("anime")) {
-             specificUrl = url + (number + 1) + "/";
+        if (url != null) {
+            if(url.toLowerCase().contains("anime")) {
+                specificUrl = url + (number + 1) + "/";
+            }
         }
-        stream.putExtra("url", specificUrl); //change to specificUrl to url on deployment
-        stream.putExtra("index", listItem);
+
+        Intent stream = new Intent(Intent.ACTION_VIEW, Uri.parse(specificUrl));
+
+        //stream.putExtra("url", specificUrl); //change to specificUrl to url on deployment
+        //stream.putExtra("index", listItem);
         PendingIntent watchIntent = PendingIntent.getActivity(context, id, stream, PendingIntent.FLAG_UPDATE_CURRENT);
 
 
@@ -67,26 +81,28 @@ public class NotificationReceiver extends BroadcastReceiver {
 
         builder.setContentIntent(pendingIntent);
 
-        builder.setSmallIcon(R.drawable.small_icon_white);
+        builder.setSmallIcon(R.drawable.notification_icon);
         builder.setSubText(MainActivity.listTitle);
         builder.setPriority(Notification.PRIORITY_MAX);
         builder.setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.self));
         builder.setContentTitle("New Release!");
-        builder.setContentText("\""+name +"\"");
-        builder.setStyle(new NotificationCompat.InboxStyle().addLine("\"" +name+"\"").addLine("Episode " + (number+1) + " is out!"));
+
+        if(name == null) {
+            builder.setContentText("Tap to Open Tracker");
+        } else {
+            builder.setContentText("\""+name +"\"");
+            builder.setStyle(new NotificationCompat.InboxStyle().addLine("\"" +name+"\"").addLine("Episode " + (number+1) + " is out!"));
+        }
 
 
-        //Add Watch Action
+        //Add "Watch Now" Action
         try {
-            if (MainActivity.list.get(listItem).getUrl().length() > 0) {
-
+            if (url.length() > 0 && URLUtil.isValidUrl(specificUrl)) {
                 builder.addAction(Color.TRANSPARENT, "Watch Now", watchIntent);
             }
-
         } catch (Exception e) {
             //Show notification without "watch option"
         }
-
 
         //Notify elements
         builder.setVibrate(new long[]{0, 350, 350});

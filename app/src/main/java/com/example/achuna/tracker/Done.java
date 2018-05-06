@@ -115,11 +115,17 @@ public class Done extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onStop() {
+        saveDoneData();
+        super.onStop();
+    }
+
     private ArrayList<Episode> loadDoneData() {
         ArrayList<Episode> a = new ArrayList<>();
         SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
         Gson gson = new Gson();
-        String json = preferences.getString("List", null);
+        String json = preferences.getString("Done List", null);
         Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
         a = gson.fromJson(json, type);
         if (a == null) a = new ArrayList<Episode>();
@@ -131,7 +137,7 @@ public class Done extends AppCompatActivity {
         SharedPreferences.Editor editor = preferences.edit();
         Gson gson = new Gson();
         String json = gson.toJson(MainActivity.doneList);
-        editor.putString("List", json);
+        editor.putString("Done List", json);
         editor.apply();
     }
 }

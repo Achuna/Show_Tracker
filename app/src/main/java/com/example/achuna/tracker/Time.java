@@ -68,6 +68,12 @@ public class Time {
     }
 
     public String convertToHour(int a) {
+
+        if(a == 0) {
+            return "12:00";
+        } else if(a > 12) {
+            a = (a-12);
+        }
         return a + ":00";
     }
 

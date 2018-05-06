@@ -92,6 +92,7 @@ public class EditorActivity extends Activity {
         episodeNumber = findViewById(R.id.showNumber);
         urlText = findViewById(R.id.urlText);
 
+
         dayList = findViewById(R.id.dayList);
         timeList = findViewById(R.id.timeList);
 
@@ -99,12 +100,14 @@ public class EditorActivity extends Activity {
         dayList.setAdapter(new dayListAdapter(EditorActivity.this, getDays(), darkTheme));
         timeList.setAdapter(new dayListAdapter(EditorActivity.this, getHours(), darkTheme));
 
-
+//how to stay in a quiet room with the most annoy teacher in the how can I be so quiet and why am in this room with this person
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             editingExitingShow = Boolean.parseBoolean(extras.get("Editing").toString());
             if(editingExitingShow) {
                 listItem = (int) extras.get("ListItem");
+                if(MainActivity.list.get(listItem).notifications)
+                    time = MainActivity.list.get(listItem).getTime();
                 Log.i("Item", extras.get("ListItem") +"");
                 notifyCheckbox.setChecked(MainActivity.list.get(listItem).getNotifications());
                 if(notifyCheckbox.isChecked()) time = MainActivity.list.get(listItem).getTime();
@@ -141,6 +144,10 @@ public class EditorActivity extends Activity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 timePreview.setDay(i+1);
                 time.setDay(i+1);
+                if(editingExitingShow) {
+                    if(MainActivity.list.get(listItem).notifications)
+                        timePreview.setHour(time.getHour());
+                }
                 notificationTime.setText(timePreview.toString());
                 time.setTimePreview(notificationTime.getText().toString());
             }
@@ -149,14 +156,16 @@ public class EditorActivity extends Activity {
         timeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                String hourString = getHours().get(i).substring(0, getHours().get(i).indexOf(":"));
-                int twelveHour = Integer.parseInt(hourString);
-                timePreview.setHour(twelveHour);
+                timePreview.setHour(i);
                 //0 for AM and 1 for PM
+                time.setHour(i);
                 int timeOfDay = (getHours().get(i).contains("AM")) ? 0 : 1;
                 timePreview.setTimeOfDay(timeOfDay);
+                if(editingExitingShow) {
+                    if(MainActivity.list.get(listItem).notifications)
+                        timePreview.setDay(time.getDay());
+                }
                 notificationTime.setText(timePreview.toString());
-                time.setHour(i);
                 time.setTimePreview(notificationTime.getText().toString());
             }
         });
@@ -213,7 +222,7 @@ public class EditorActivity extends Activity {
                         SharedPreferences.Editor editor = preferences.edit();
                         Gson gson = new Gson();
                         String json = gson.toJson(MainActivity.planList);
-                        editor.putString("List", json);
+                        editor.putString("Plan List", json);
                         editor.apply();
                         Toast.makeText(getApplicationContext(), "\""+ showName.getText() + "\" added to watch later", Toast.LENGTH_SHORT).show();
                         startActivity(startMain);
@@ -243,7 +252,7 @@ public class EditorActivity extends Activity {
                         }
 
                     } else {
-                        Intent goBackToMain = new Intent(getApplicationContext(), MainActivity.class);
+                        final Intent goBackToMain = new Intent(getApplicationContext(), MainActivity.class);
 
                         if(editingExitingShow == false) { //Creating a new Show
 
@@ -251,17 +260,57 @@ public class EditorActivity extends Activity {
                             int number = Integer.parseInt(episodeNumber.getText().toString());
                             String url = urlText.getText().toString();
                             int id = (int) System.currentTimeMillis();
-                            Episode newShow  = new Episode(name, number, url, notifyCheckbox.isChecked(), time, id);
-                            MainActivity.list.add(newShow);
-                            int newIndex = MainActivity.list.indexOf(newShow);
+                            final Episode newShow  = new Episode(name, number, url, notifyCheckbox.isChecked(), time, id);
 
-                            if(newShow.notifications) {
-                                setAlarm(MainActivity.list.get(newIndex));
+                            AlertDialog.Builder builder = new AlertDialog.Builder(EditorActivity.this);
+
+                            builder.setTitle("New Show!");
+                            if (darkTheme) {
+                                builder.setIcon(R.drawable.lightbulb_outline_white);
                             } else {
-                                cancelAlarm(MainActivity.list.get(newIndex));
+                                builder.setIcon(R.drawable.lightbulb_outline_black);
                             }
 
-                            saveData();
+                            builder.setMessage("What would you like to do with this item?");
+
+                            builder.setPositiveButton("Start Tracking", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    MainActivity.list.add(newShow);
+                                    int newIndex = MainActivity.list.indexOf(newShow);
+
+                                    if(newShow.notifications) {
+                                        setAlarm(MainActivity.list.get(newIndex));
+                                    } else {
+                                        cancelAlarm(MainActivity.list.get(newIndex));
+                                    }
+                                    saveData();
+                                    startActivity(goBackToMain);
+                                }
+                            });
+
+                            builder.setNegativeButton("Watch Later", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    MainActivity.list.add(newShow);
+                                    int newIndex = MainActivity.list.indexOf(newShow);
+                                    MainActivity.planList.add(MainActivity.list.get(newIndex));
+                                    MainActivity.list.remove(newIndex);
+                                    saveData();
+                                    SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
+                                    SharedPreferences.Editor editor = preferences.edit();
+                                    Gson gson = new Gson();
+                                    String json = gson.toJson(MainActivity.planList);
+                                    editor.putString("Plan List", json);
+                                    editor.apply();
+                                    Toast.makeText(getApplicationContext(), "\""+ showName.getText() + "\" added to watch later", Toast.LENGTH_SHORT).show();
+                                    saveData();
+                                    startActivity(goBackToMain);
+                                }
+                            });
+
+                            AlertDialog dialog = builder.create();
+                            dialog.show();
 
                         } else { //Editing an existing show
 
@@ -279,8 +328,8 @@ public class EditorActivity extends Activity {
                             }
 
                             saveData();
+                            startActivity(goBackToMain);
                         }
-                        startActivity(goBackToMain);
                     }
             }
         });
@@ -320,15 +369,13 @@ public class EditorActivity extends Activity {
                         Intent stream = new Intent(Intent.ACTION_VIEW, Uri.parse(specificUrl));
                         try {
                             startActivity(stream);
+                            MainActivity.list.get(listItem).setNumber(Integer.parseInt(episodeNumber.getText().toString()) + 1);
+                            saveData();
                         } catch (Exception e) {
-                            Intent backToMain = new Intent(getApplicationContext(), MainActivity.class);
                             Toast.makeText(getApplicationContext(), "Problem Opening URL", Toast.LENGTH_SHORT).show();
-                            startActivity(backToMain);
                         }
                     } else {
-                        Intent backToMain = new Intent(getApplicationContext(), MainActivity.class);
                         Toast.makeText(getApplicationContext(), "URL Not Entered", Toast.LENGTH_SHORT).show();
-                        startActivity(backToMain);
                     }
 
                 }
@@ -383,7 +430,7 @@ public class EditorActivity extends Activity {
                 SharedPreferences.Editor editor = preferences.edit();
                 Gson gson = new Gson();
                 String json = gson.toJson(MainActivity.planList);
-                editor.putString("List", json);
+                editor.putString("Plan List", json);
                 editor.apply();
                 Toast.makeText(getApplicationContext(), "\""+ showName.getText() + "\" added to watch later", Toast.LENGTH_SHORT).show();
                 startActivity(startMain);
@@ -425,12 +472,12 @@ public class EditorActivity extends Activity {
     public void setAlarm(Episode show) {
 
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
         Calendar now = Calendar.getInstance();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(System.currentTimeMillis());
-        int hour = show.getTime().getHour();
+
         calendar.set(Calendar.HOUR_OF_DAY, show.getTime().getHour());
-        //Toast.makeText(getApplicationContext(), "Item: " + list.indexOf(show) + "\nDay: "+show.getTime().getDay() + " Hour: "+show.getTime().getHour()+"", Toast.LENGTH_LONG).show();
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.DAY_OF_WEEK, show.getTime().getDay());
@@ -443,25 +490,18 @@ public class EditorActivity extends Activity {
         intent.putExtra("id", show.getId());
 
         long weeklyInterval = 1000 * 60 * 60 * 24 * 7;
-        //long interval = 1000 * 10;
-
         long diff = now.getTimeInMillis() - calendar.getTimeInMillis();
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), show.getId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
         if (diff > 0) {
-            calendar.add(Calendar.DAY_OF_WEEK, 7); //Try using 1 if this acts up
-
-
-            // Toast.makeText(getApplicationContext(), "Item: " + list.indexOf(show) + " \nAdded Week", Toast.LENGTH_SHORT).show();
+            alarmManager.cancel(pendingIntent);
+            //calendar.add(Calendar.DAY_OF_YEAR, 1); //Avoid firing when save button is clicked
+        } else {
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), weeklyInterval, pendingIntent);
+            //Toast.makeText(getApplicationContext(), "Item: " + MainActivity.list.indexOf(show) + "\nDay: "+show.getTime().getDay() + " Hour: "+show.getTime().getHour()+"", Toast.LENGTH_LONG).show();
+            // alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
         }
 
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), show.getId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
-//        if (pendingIntent == null) {
-//            Toast.makeText(getApplicationContext(), "Notification", Toast.LENGTH_SHORT).show();
-//        }
-
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), weeklyInterval, pendingIntent);
-        //Toast.makeText(getApplicationContext(), "Item: " + MainActivity.list.indexOf(show) + "\nDay: "+show.getTime().getDay() + " Hour: "+show.getTime().getHour()+"", Toast.LENGTH_LONG).show();
-        // alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
 
     }
 
@@ -479,7 +519,7 @@ public class EditorActivity extends Activity {
         SharedPreferences.Editor editor = preferences.edit();
         Gson gson = new Gson();
         String json = gson.toJson(MainActivity.doneList);
-        editor.putString("List", json);
+        editor.putString("Done List", json);
         editor.apply();
     }
 
@@ -496,4 +536,16 @@ public class EditorActivity extends Activity {
         return days;
     }
 
+    @Override
+    protected void onStop() {
+        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(MainActivity.planList);
+        editor.putString("Plan List", json);
+        editor.apply();
+        saveDoneData();
+        saveData();
+        super.onStop();
+    }
 }
