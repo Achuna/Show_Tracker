@@ -374,7 +374,6 @@ public class EditorActivity extends Activity {
                             if (stream.resolveActivity(getPackageManager()) != null) {
                                 startActivity(chooser);
                             }
-                            //MainActivity.list.get(listItem).setNumber(Integer.parseInt(episodeNumber.getText().toString()) + 1);
                             saveData();
                         } catch (Exception e) {
                             Toast.makeText(getApplicationContext(), "Problem Opening URL", Toast.LENGTH_SHORT).show();
