@@ -366,10 +366,15 @@ public class EditorActivity extends Activity {
                         if(urlText.getText().toString().toLowerCase().contains("anime")) {
                             specificUrl = urlText.getText().toString()  + (episode + 1) + "/";
                         }
-                        Intent stream = new Intent(Intent.ACTION_VIEW, Uri.parse(specificUrl));
+                        //Intent stream = new Intent(Intent.ACTION_VIEW, Uri.parse(specificUrl));
+                        Intent stream = new Intent(Intent.ACTION_VIEW);
+                        stream.setData(Uri.parse(specificUrl));
+                        Intent chooser = Intent.createChooser(stream, "Select Browser");
                         try {
-                            startActivity(stream);
-                            MainActivity.list.get(listItem).setNumber(Integer.parseInt(episodeNumber.getText().toString()) + 1);
+                            if (stream.resolveActivity(getPackageManager()) != null) {
+                                startActivity(chooser);
+                            }
+                            //MainActivity.list.get(listItem).setNumber(Integer.parseInt(episodeNumber.getText().toString()) + 1);
                             saveData();
                         } catch (Exception e) {
                             Toast.makeText(getApplicationContext(), "Problem Opening URL", Toast.LENGTH_SHORT).show();
