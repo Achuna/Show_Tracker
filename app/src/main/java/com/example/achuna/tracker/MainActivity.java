@@ -508,7 +508,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    protected void onRestart() {
+        protected void onRestart() {
+
+        EpisodeListAdapter adapter = new EpisodeListAdapter(getApplicationContext(), loadListData(), darkTheme);
+
+        //Preparing Lists
+        list = loadListData();
+        doneList = loadDoneData();
+        planList = loadPlanData();
+
+        episodeList.setAdapter(adapter);
+
         int size = navigationView.getMenu().size();
         for (int i = 0; i < size; i++) {
             navigationView.getMenu().getItem(i).setChecked(false);

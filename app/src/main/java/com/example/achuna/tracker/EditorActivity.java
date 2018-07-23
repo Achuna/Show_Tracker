@@ -3,9 +3,13 @@ package com.example.achuna.tracker;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
@@ -21,9 +25,11 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 
 public class EditorActivity extends Activity {
 
@@ -367,12 +373,28 @@ public class EditorActivity extends Activity {
                             specificUrl = urlText.getText().toString()  + (episode + 1) + "/";
                         }
                         //Intent stream = new Intent(Intent.ACTION_VIEW, Uri.parse(specificUrl));
+
+                        //Copy URL to Clipboard
+                        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        ClipData clip = ClipData.newPlainText("label", specificUrl);
+                        clipboard.setPrimaryClip(clip);
+                        Toast.makeText(getApplicationContext(), "URL Copied", Toast.LENGTH_SHORT).show();
+
+
                         Intent stream = new Intent(Intent.ACTION_VIEW);
                         stream.setData(Uri.parse(specificUrl));
-                        Intent chooser = Intent.createChooser(stream, "Select Browser");
+                        if(isPackageExisted("com.hsv.freeadblockerbrowser")) {
+                            stream.setPackage("com.hsv.freeadblockerbrowser");
+                        }
+
                         try {
                             if (stream.resolveActivity(getPackageManager()) != null) {
-                                startActivity(chooser);
+                                if(isPackageExisted("com.hsv.freeadblockerbrowser")) {
+                                    startActivity(stream);
+                                } else {
+                                    Intent chooser = new Intent (Intent.ACTION_VIEW, Uri.parse(specificUrl));
+                                    startActivity(chooser);
+                                }
                             }
                             saveData();
                         } catch (Exception e) {
@@ -459,6 +481,19 @@ public class EditorActivity extends Activity {
             }
         });
 
+    }
+
+    public boolean isPackageExisted(String targetPackage){
+        List<ApplicationInfo> packages;
+        PackageManager pm;
+
+        pm = getPackageManager();
+        packages = pm.getInstalledApplications(0);
+        for (ApplicationInfo packageInfo : packages) {
+            if(packageInfo.packageName.equals(targetPackage))
+                return true;
+        }
+        return false;
     }
 
     public void cancelAlarm(Episode show) {

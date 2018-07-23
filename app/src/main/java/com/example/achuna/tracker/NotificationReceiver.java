@@ -4,6 +4,8 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,6 +16,7 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.webkit.URLUtil;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -21,6 +24,7 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 
+import static android.content.Context.CLIPBOARD_SERVICE;
 import static android.content.Context.MODE_PRIVATE;
 
 /**
@@ -65,14 +69,27 @@ public class NotificationReceiver extends BroadcastReceiver {
         if (url != null) {
             if(url.toLowerCase().contains("anime")) {
                 specificUrl = url + (number + 1) + "/";
+                ClipboardManager clipboard = (ClipboardManager) context.getSystemService(CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("label", specificUrl);
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(context, "URL Copied", Toast.LENGTH_SHORT).show();
             }
         }
 
-        Intent stream = new Intent(Intent.ACTION_VIEW, Uri.parse(specificUrl));
+        context.getPackageManager().clearPackagePreferredActivities(context.getPackageName());
+        Intent stream = new Intent(Intent.ACTION_VIEW);
+
+        stream.setData(Uri.parse(specificUrl));
+        Intent chooser = Intent.createChooser(stream, "Select Browser");
 
         //stream.putExtra("url", specificUrl); //change to specificUrl to url on deployment
         //stream.putExtra("index", listItem);
-        PendingIntent watchIntent = PendingIntent.getActivity(context, id, stream, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent watchIntent = PendingIntent.getActivity(context, id, chooser, PendingIntent.FLAG_UPDATE_CURRENT);
+
+
+
+
+
 
 
         ///////////////Build Notification/////////////
