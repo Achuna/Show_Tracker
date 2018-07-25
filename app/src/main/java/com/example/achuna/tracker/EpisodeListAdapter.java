@@ -54,6 +54,7 @@ public class EpisodeListAdapter extends ArrayAdapter<String> {
             viewHolder.episodeName.setTextColor(Color.WHITE);
             viewHolder.episodeNumber.setText(MainActivity.list.get(position).getNumber() + "");
             viewHolder.episodeNumber.setTextColor(Color.WHITE);
+
         } else {
             viewHolder.episodeName.setText(MainActivity.list.get(position).getName());
             viewHolder.episodeName.setTextColor(Color.BLACK);
