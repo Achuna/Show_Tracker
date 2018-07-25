@@ -11,14 +11,16 @@ public class Episode {
     boolean notifications;
     private Time time;
     private int id;
+    private int listId; //1: Main list, 2: Plan to Watch, 3: Done
 
-    public Episode(String name, int number, String url, boolean notifications, Time time, int id) {
+    public Episode(String name, int number, String url, boolean notifications, Time time, int id, int listId) {
         this.name = name;
         this.number = number;
         this.url = url;
         this.notifications = notifications;
         this.time = time;
         this.id = id;
+        this.listId = listId;
     }
 
     public String getName() {
@@ -60,14 +62,21 @@ public class Episode {
     public void setTime(Time time) {
         this.time = time;
     }
-
-
+    
     public int getId() {
         return id;
     }
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getListId() {
+        return listId;
+    }
+
+    public void setListId(int listId) {
+        this.listId = listId;
     }
 
     @Override

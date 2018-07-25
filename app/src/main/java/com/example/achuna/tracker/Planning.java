@@ -3,6 +3,7 @@ package com.example.achuna.tracker;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -21,6 +22,7 @@ public class Planning extends AppCompatActivity {
 
     ListView watchList;
     int listItem = 0;
+    SQLiteHandler database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,14 +61,9 @@ public class Planning extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_planning);
 
-        MainActivity.planList = loadPlanData();
+        database = new SQLiteHandler(this, null, null, 1);
+        loadAllData();
 
-        Log.i("Done", MainActivity.planList.size() + "");
-
-
-        for (int i = 0; i < MainActivity.planList.size(); i++) {
-            Log.i("Done", MainActivity.planList.get(i).getName());
-        }
 
         watchList = findViewById(R.id.planList);
         SimpleListAdapter adapter = new SimpleListAdapter(getApplicationContext(), MainActivity.planList, darkTheme);
@@ -88,16 +85,18 @@ public class Planning extends AppCompatActivity {
                 builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int j) {
+                        MainActivity.planList.get(listItem).setListId(1);
                         MainActivity.list.add(MainActivity.planList.get(listItem));
                         MainActivity.planList.remove(listItem);
                         Intent toMain = new Intent(getApplicationContext(), MainActivity.class);
-                        savePlanData();
-                        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
-                        SharedPreferences.Editor editor = preferences.edit();
-                        Gson gson = new Gson();
-                        String json = gson.toJson(MainActivity.list);
-                        editor.putString("List", json);
-                        editor.apply();
+//                        savePlanData();
+//                        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
+//                        SharedPreferences.Editor editor = preferences.edit();
+//                        Gson gson = new Gson();
+//                        String json = gson.toJson(MainActivity.list);
+//                        editor.putString("List", json);
+//                        editor.apply();
+                        saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
 
                         startActivity(toMain);
                     }
@@ -120,27 +119,59 @@ public class Planning extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        savePlanData();
+        saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
         super.onStop();
     }
 
-    private ArrayList<Episode> loadPlanData() {
-        ArrayList<Episode> a = new ArrayList<>();
-        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-        Gson gson = new Gson();
-        String json = preferences.getString("Plan List", null);
-        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
-        a = gson.fromJson(json, type);
-        if (a == null) a = new ArrayList<Episode>();
-        return a;
+    public void loadAllData() {
+        Cursor data = database.getData();
+        MainActivity.list.clear();
+        MainActivity.planList.clear();
+        MainActivity.doneList.clear();
+        while(data.moveToNext()) {
+            if(data.getInt(10) == 1) {
+                MainActivity.list.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+            } else if(data.getInt(10) == 2) {
+                MainActivity.planList.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+            } else {
+                MainActivity.doneList.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+            }
+        }
     }
 
-    private void savePlanData() {
-        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(MainActivity.planList);
-        editor.putString("Plan List", json);
-        editor.apply();
+    public void saveAllData(ArrayList<Episode> a, ArrayList<Episode> b, ArrayList<Episode> c) {
+        database.clearShows();
+        for (int i = 0; i < a.size(); i++) {
+            database.addShow(a.get(i));
+        }
+        for (int i = 0; i < b.size(); i++) {
+            database.addShow(b.get(i));
+        }
+        for (int i = 0; i < c.size(); i++) {
+            database.addShow(c.get(i));
+        }
     }
+
+//    private ArrayList<Episode> loadPlanData() {
+//        ArrayList<Episode> a = new ArrayList<>();
+//        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
+//        Gson gson = new Gson();
+//        String json = preferences.getString("Plan List", null);
+//        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
+//        a = gson.fromJson(json, type);
+//        if (a == null) a = new ArrayList<Episode>();
+//        return a;
+//    }
+//
+//    private void savePlanData() {
+//        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = preferences.edit();
+//        Gson gson = new Gson();
+//        String json = gson.toJson(MainActivity.planList);
+//        editor.putString("Plan List", json);
+//        editor.apply();
+//    }
 }

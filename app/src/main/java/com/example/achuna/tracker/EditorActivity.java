@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
@@ -42,6 +43,7 @@ public class EditorActivity extends Activity {
     boolean editingExitingShow = false;
     Time time = new Time(1, 1, 1, "");
     Time timePreview = new Time(1, 1, 1, "");
+    SQLiteHandler database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +104,7 @@ public class EditorActivity extends Activity {
         dayList = findViewById(R.id.dayList);
         timeList = findViewById(R.id.timeList);
 
+        database = new SQLiteHandler(this, null, null, 1);
 
         dayList.setAdapter(new dayListAdapter(EditorActivity.this, getDays(), darkTheme));
         timeList.setAdapter(new dayListAdapter(EditorActivity.this, getHours(), darkTheme));
@@ -205,7 +208,8 @@ public class EditorActivity extends Activity {
                     public void onClick(DialogInterface dialogInterface, int i) {
                         Toast.makeText(getApplicationContext(), "\"" + showName.getText() + "\" has been deleted", Toast.LENGTH_LONG).show();
                         MainActivity.list.remove(listItem);
-                        saveData();
+                        //saveData();
+                        saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                         Intent main = new Intent(getApplicationContext(), MainActivity.class);
                         startActivity(main);
                         dialogInterface.dismiss();
@@ -215,21 +219,24 @@ public class EditorActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         dialogInterface.dismiss();
+
                     }
                 });
                 builder.setNeutralButton("Watch Later", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         Intent startMain = new Intent(getApplicationContext(), MainActivity.class);
+                        MainActivity.list.get(listItem).setListId(2);
                         MainActivity.planList.add(MainActivity.list.get(listItem));
                         MainActivity.list.remove(listItem);
-                        saveData();
-                        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-                        SharedPreferences.Editor editor = preferences.edit();
-                        Gson gson = new Gson();
-                        String json = gson.toJson(MainActivity.planList);
-                        editor.putString("Plan List", json);
-                        editor.apply();
+//                        saveData();
+//                        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
+//                        SharedPreferences.Editor editor = preferences.edit();
+//                        Gson gson = new Gson();
+//                        String json = gson.toJson(MainActivity.planList);
+//                        editor.putString("Plan List", json);
+//                        editor.apply();
+                        saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                         Toast.makeText(getApplicationContext(), "\""+ showName.getText() + "\" added to watch later", Toast.LENGTH_SHORT).show();
                         startActivity(startMain);
                     }
@@ -266,7 +273,9 @@ public class EditorActivity extends Activity {
                             int number = Integer.parseInt(episodeNumber.getText().toString());
                             String url = urlText.getText().toString();
                             int id = (int) System.currentTimeMillis();
-                            final Episode newShow  = new Episode(name, number, url, notifyCheckbox.isChecked(), time, id);
+                            final Episode newShow  = new Episode(name, number, url, notifyCheckbox.isChecked(), time, id, 1);
+
+                            database.addShow(newShow);
 
                             AlertDialog.Builder builder = new AlertDialog.Builder(EditorActivity.this);
 
@@ -290,7 +299,8 @@ public class EditorActivity extends Activity {
                                     } else {
                                         cancelAlarm(MainActivity.list.get(newIndex));
                                     }
-                                    saveData();
+                                   // saveData();
+                                    saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                                     startActivity(goBackToMain);
                                 }
                             });
@@ -298,19 +308,22 @@ public class EditorActivity extends Activity {
                             builder.setNegativeButton("Watch Later", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
+                                    newShow.setListId(2);
+                                    database.updateShow(newShow);
                                     MainActivity.list.add(newShow);
                                     int newIndex = MainActivity.list.indexOf(newShow);
                                     MainActivity.planList.add(MainActivity.list.get(newIndex));
                                     MainActivity.list.remove(newIndex);
-                                    saveData();
-                                    SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-                                    SharedPreferences.Editor editor = preferences.edit();
-                                    Gson gson = new Gson();
-                                    String json = gson.toJson(MainActivity.planList);
-                                    editor.putString("Plan List", json);
-                                    editor.apply();
-                                    Toast.makeText(getApplicationContext(), "\""+ showName.getText() + "\" added to watch later", Toast.LENGTH_SHORT).show();
-                                    saveData();
+//                                    saveData();
+//                                    SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
+//                                    SharedPreferences.Editor editor = preferences.edit();
+//                                    Gson gson = new Gson();
+//                                    String json = gson.toJson(MainActivity.planList);
+//                                    editor.putString("Plan List", json);
+//                                    editor.apply();
+//                                    Toast.makeText(getApplicationContext(), "\""+ showName.getText() + "\" added to watch later", Toast.LENGTH_SHORT).show();
+//                                    saveData();
+                                    saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                                     startActivity(goBackToMain);
                                 }
                             });
@@ -333,7 +346,8 @@ public class EditorActivity extends Activity {
                                 cancelAlarm(MainActivity.list.get(listItem));
                             }
 
-                            saveData();
+                            //saveData();
+                            saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                             startActivity(goBackToMain);
                         }
                     }
@@ -364,8 +378,8 @@ public class EditorActivity extends Activity {
                     MainActivity.list.get(listItem).setNotifications(notifyCheckbox.isChecked());
                     MainActivity.list.get(listItem).setTime(time);
 
-                    saveData();
-
+                    //saveData();
+                    saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                     if (urlText.getText().length() > 0) {
                         int episode = Integer.parseInt(episodeNumber.getText().toString());
                         String specificUrl = urlText.getText().toString();
@@ -396,7 +410,8 @@ public class EditorActivity extends Activity {
                                     startActivity(chooser);
                                 }
                             }
-                            saveData();
+                            //saveData();
+                            saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                         } catch (Exception e) {
                             Toast.makeText(getApplicationContext(), "Problem Opening URL", Toast.LENGTH_SHORT).show();
                         }
@@ -424,10 +439,12 @@ public class EditorActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         Toast.makeText(getApplicationContext(), "Congrats on finishing \"" + showName.getText() + "\"!", Toast.LENGTH_LONG).show();
+                        MainActivity.list.get(listItem).setListId(3);
                         MainActivity.doneList.add(MainActivity.list.get(listItem));
                         MainActivity.list.remove(listItem);
-                        saveDoneData();
-                        saveData();
+//                        saveDoneData();
+//                        saveData();
+                        saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                         Intent main = new Intent(getApplicationContext(), MainActivity.class);
                         startActivity(main);
                     }
@@ -449,15 +466,17 @@ public class EditorActivity extends Activity {
             @Override
             public void onClick(View view) {
                 Intent startMain = new Intent(getApplicationContext(), MainActivity.class);
+                MainActivity.list.get(listItem).setListId(2);
                 MainActivity.planList.add(MainActivity.list.get(listItem));
                 MainActivity.list.remove(listItem);
-                saveData();
-                SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-                SharedPreferences.Editor editor = preferences.edit();
-                Gson gson = new Gson();
-                String json = gson.toJson(MainActivity.planList);
-                editor.putString("Plan List", json);
-                editor.apply();
+                //saveData();
+//                SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
+//                SharedPreferences.Editor editor = preferences.edit();
+//                Gson gson = new Gson();
+//                String json = gson.toJson(MainActivity.planList);
+//                editor.putString("Plan List", json);
+//                editor.apply();
+                saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                 Toast.makeText(getApplicationContext(), "\""+ showName.getText() + "\" added to watch later", Toast.LENGTH_SHORT).show();
                 startActivity(startMain);
             }
@@ -544,22 +563,54 @@ public class EditorActivity extends Activity {
 
     }
 
-    private void saveData() {
-        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(MainActivity.list);
-        editor.putString("List", json);
-        editor.apply();
+//    private void saveData() {
+//        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = preferences.edit();
+//        Gson gson = new Gson();
+//        String json = gson.toJson(MainActivity.list);
+//        editor.putString("List", json);
+//        editor.apply();
+//    }
+//
+//    private void saveDoneData() {
+//        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = preferences.edit();
+//        Gson gson = new Gson();
+//        String json = gson.toJson(MainActivity.doneList);
+//        editor.putString("Done List", json);
+//        editor.apply();
+//    }
+
+    public void loadAllData() {
+        Cursor data = database.getData();
+        MainActivity.list.clear();
+        MainActivity.planList.clear();
+        MainActivity.doneList.clear();
+        while(data.moveToNext()) {
+            if(data.getInt(10) == 1) {
+                MainActivity.list.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+            } else if(data.getInt(10) == 2) {
+                MainActivity.planList.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+            } else {
+                MainActivity.doneList.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+            }
+        }
     }
 
-    private void saveDoneData() {
-        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(MainActivity.doneList);
-        editor.putString("Done List", json);
-        editor.apply();
+    public void saveAllData(ArrayList<Episode> a, ArrayList<Episode> b, ArrayList<Episode> c) {
+        database.clearShows();
+        for (int i = 0; i < a.size(); i++) {
+            database.addShow(a.get(i));
+        }
+        for (int i = 0; i < b.size(); i++) {
+            database.addShow(b.get(i));
+        }
+        for (int i = 0; i < c.size(); i++) {
+            database.addShow(c.get(i));
+        }
     }
 
     private ArrayList<String> getHours() {
@@ -577,14 +628,17 @@ public class EditorActivity extends Activity {
 
     @Override
     protected void onStop() {
-        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(MainActivity.planList);
-        editor.putString("Plan List", json);
-        editor.apply();
-        saveDoneData();
-        saveData();
+//        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = preferences.edit();
+//        Gson gson = new Gson();
+//        String json = gson.toJson(MainActivity.planList);
+//        editor.putString("Plan List", json);
+//        editor.apply();
+//        saveDoneData();
+//        saveData();
+
+        saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
+
         super.onStop();
     }
 }

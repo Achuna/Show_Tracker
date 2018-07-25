@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -44,10 +45,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ListView episodeList;
     Button addShow;
     TextView title, drawerTitle;
-
     DrawerLayout sideBar;
     ActionBarDrawerToggle sideBarToggle;
     NavigationView navigationView;
+
+    SQLiteHandler database;
 
     static AlarmManager alarmManager;
 
@@ -165,12 +167,37 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         title = findViewById(R.id.episodeMainTitle);
         title.setText(listTitle);
 
-        final EpisodeListAdapter adapter = new EpisodeListAdapter(getApplicationContext(), loadListData(), darkTheme);
+        database = new SQLiteHandler(this, null, null, 1);
+
+        list = new ArrayList<>();
+        planList = new ArrayList<>();
+        doneList = new ArrayList<>();
+
+        loadAllData();
+
+
+        final EpisodeListAdapter adapter = new EpisodeListAdapter(getApplicationContext(), list, darkTheme);
 
         //Preparing Lists
-        list = loadListData();
-        doneList = loadDoneData();
-        planList = loadPlanData();
+
+
+
+//        list = loadListData();
+//        doneList = loadDoneData();
+//        planList = loadPlanData();
+
+//        for (int i = 0; i < list.size(); i++) {
+//            Log.i("Testing", "Main List id: "+list.get(i).getListId()+"");
+//        }
+//
+//        for (int i = 0; i < planList.size(); i++) {
+//            Log.i("Testing", "Main List id: "+planList.get(i).getListId()+"");
+//        }
+//
+//        for (int i = 0; i < doneList.size(); i++) {
+//            Log.i("Testing", "Main List id: "+doneList.get(i).getListId()+"");
+//        }
+
 
         episodeList.setAdapter(adapter);
 
@@ -209,9 +236,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
-        saveListData(list);
-        saveDoneData();
-        saveLaterData();
+//        saveListData(list);
+//        saveDoneData();
+//        saveLaterData();
+
+        saveAllData(list, planList, doneList);
+
+
 
         SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
         SharedPreferences.Editor urlEditor = streaming.edit();
@@ -277,69 +308,102 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     ////////////////////SAVING LIST DATA//////////////////////
 
-    public void saveListData(ArrayList<Episode> a) {
-        //Converting arraylist into json format
-        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(a);
-        editor.putString("List", json);
-        editor.apply();
+
+    public void loadAllData() {
+        Cursor data = database.getData();
+        list.clear();
+        planList.clear();
+        doneList.clear();
+        while(data.moveToNext()) {
+            if(data.getInt(10) == 1) {
+                list.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+            } else if(data.getInt(10) == 2) {
+                planList.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+            } else {
+                doneList.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+            }
+        }
     }
 
-    private void saveDoneData() {
-        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(MainActivity.doneList);
-        editor.putString("Done List", json);
-        editor.apply();
+    public void saveAllData(ArrayList<Episode> a, ArrayList<Episode> b, ArrayList<Episode> c) {
+        database.clearShows();
+        for (int i = 0; i < a.size(); i++) {
+            database.addShow(a.get(i));
+        }
+        for (int i = 0; i < b.size(); i++) {
+            database.addShow(b.get(i));
+        }
+        for (int i = 0; i < c.size(); i++) {
+            database.addShow(c.get(i));
+        }
     }
 
-    private void saveLaterData() {
-        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(MainActivity.planList);
-        editor.putString("Plan List", json);
-        editor.apply();
-    }
-
-    /////////////////LOADING LIST DATA//////////////////////
-
-    public ArrayList<Episode> loadListData() {
-        ArrayList<Episode> a = new ArrayList<>();
-        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
-        Gson gson = new Gson(); //Using Gson library to make the list data into a string json text
-        String json = preferences.getString("List", null);
-        Type type = new TypeToken<ArrayList<Episode>>() {
-        }.getType();
-        a = gson.fromJson(json, type);
-        if (a == null) a = new ArrayList<Episode>();
-        return a;
-    }
-
-    public ArrayList<Episode> loadDoneData() {
-        ArrayList<Episode> a = new ArrayList<>();
-        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
-        Gson gson = new Gson();
-        String json = preferences.getString("Done List", null);
-        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
-        a = gson.fromJson(json, type);
-        if (a == null) a = new ArrayList<Episode>();
-        return a;
-    }
-
-    public ArrayList<Episode> loadPlanData() {
-        ArrayList<Episode> a = new ArrayList<>();
-        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-        Gson gson = new Gson();
-        String json = preferences.getString("Plan List", null);
-        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
-        a = gson.fromJson(json, type);
-        if (a == null) a = new ArrayList<Episode>();
-        return a;
-    }
+//    public void saveListData(ArrayList<Episode> a) {
+//        //Converting arraylist into json format
+//        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = preferences.edit();
+//        Gson gson = new Gson();
+//        String json = gson.toJson(a);
+//        editor.putString("List", json);
+//        editor.apply();
+//    }
+//
+//    private void saveDoneData() {
+//        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = preferences.edit();
+//        Gson gson = new Gson();
+//        String json = gson.toJson(MainActivity.doneList);
+//        editor.putString("Done List", json);
+//        editor.apply();
+//    }
+//
+//    private void saveLaterData() {
+//        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = preferences.edit();
+//        Gson gson = new Gson();
+//        String json = gson.toJson(MainActivity.planList);
+//        editor.putString("Plan List", json);
+//        editor.apply();
+//    }
+//
+//    /////////////////LOADING LIST DATA//////////////////////
+//
+//    public ArrayList<Episode> loadListData() {
+//        ArrayList<Episode> a = new ArrayList<>();
+//        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
+//        Gson gson = new Gson(); //Using Gson library to make the list data into a string json text
+//        String json = preferences.getString("List", null);
+//        Type type = new TypeToken<ArrayList<Episode>>() {
+//        }.getType();
+//        a = gson.fromJson(json, type);
+//        if (a == null) a = new ArrayList<Episode>();
+//        return a;
+//    }
+//
+//    public ArrayList<Episode> loadDoneData() {
+//        ArrayList<Episode> a = new ArrayList<>();
+//        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
+//        Gson gson = new Gson();
+//        String json = preferences.getString("Done List", null);
+//        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
+//        a = gson.fromJson(json, type);
+//        if (a == null) a = new ArrayList<Episode>();
+//        return a;
+//    }
+//
+//    public ArrayList<Episode> loadPlanData() {
+//        ArrayList<Episode> a = new ArrayList<>();
+//        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
+//        Gson gson = new Gson();
+//        String json = preferences.getString("Plan List", null);
+//        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
+//        a = gson.fromJson(json, type);
+//        if (a == null) a = new ArrayList<Episode>();
+//        return a;
+//    }
 
 
     @Override
@@ -510,12 +574,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
         protected void onRestart() {
 
-        EpisodeListAdapter adapter = new EpisodeListAdapter(getApplicationContext(), loadListData(), darkTheme);
-
         //Preparing Lists
-        list = loadListData();
-        doneList = loadDoneData();
-        planList = loadPlanData();
+//        list = loadListData();
+//        doneList = loadDoneData();
+//        planList = loadPlanData();
+
+        loadAllData();
+
+        EpisodeListAdapter adapter = new EpisodeListAdapter(getApplicationContext(), list, darkTheme);
 
         episodeList.setAdapter(adapter);
 

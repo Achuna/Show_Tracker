@@ -22,11 +22,13 @@ public class EpisodeListAdapter extends ArrayAdapter<String> {
     Context context;
     ArrayList<Episode> shows;
     boolean darkTheme;
+    SQLiteHandler database;
 
     public EpisodeListAdapter(@NonNull Context context, ArrayList<Episode> show, boolean darkTheme) {
         super(context, R.layout.episode_list);
         this.shows = show;
         this.darkTheme = darkTheme;
+        database = new SQLiteHandler(context, null, null, 1);
     }
 
     @Override
@@ -67,6 +69,7 @@ public class EpisodeListAdapter extends ArrayAdapter<String> {
             public void onClick(View view) {
                 MainActivity.list.get(position).setNumber(MainActivity.list.get(position).getNumber() + 1);
                 viewHolder.episodeNumber.setText(MainActivity.list.get(position).getNumber() + "");
+                database.updateShow(MainActivity.list.get(position));
             }
         });
 
@@ -75,6 +78,7 @@ public class EpisodeListAdapter extends ArrayAdapter<String> {
             public boolean onLongClick(View view) {
                 MainActivity.list.get(position).setNumber(MainActivity.list.get(position).getNumber() + 5);
                 viewHolder.episodeNumber.setText(MainActivity.list.get(position).getNumber() + "");
+                database.updateShow(MainActivity.list.get(position));
                 return true;
             }
         });
@@ -84,6 +88,7 @@ public class EpisodeListAdapter extends ArrayAdapter<String> {
                 if (MainActivity.list.get(position).getNumber() >= 1) {
                     MainActivity.list.get(position).setNumber(MainActivity.list.get(position).getNumber() - 1);
                     viewHolder.episodeNumber.setText(MainActivity.list.get(position).getNumber() + "");
+                    database.updateShow(MainActivity.list.get(position));
                 }
             }
         });
