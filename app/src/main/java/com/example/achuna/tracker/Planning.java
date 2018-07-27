@@ -86,6 +86,7 @@ public class Planning extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int j) {
                         MainActivity.planList.get(listItem).setListId(1);
+                        database.updateShow(MainActivity.planList.get(listItem));
                         MainActivity.list.add(MainActivity.planList.get(listItem));
                         MainActivity.planList.remove(listItem);
                         Intent toMain = new Intent(getApplicationContext(), MainActivity.class);
@@ -143,7 +144,7 @@ public class Planning extends AppCompatActivity {
     }
 
     public void saveAllData(ArrayList<Episode> a, ArrayList<Episode> b, ArrayList<Episode> c) {
-        database.clearShows();
+        if (((a.size() + b.size() + c.size()) > 0)) database.clearShows();
         for (int i = 0; i < a.size(); i++) {
             database.addShow(a.get(i));
         }

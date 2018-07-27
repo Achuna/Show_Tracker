@@ -76,22 +76,23 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     }
 
-    public void deleteShow(String showName) {
+    public void deleteShow(int id) {
         SQLiteDatabase db = getWritableDatabase();
-        String query = "DELETE FROM " + TABLE_NAME + " WHERE " + COLUMN_NAME + "=\"" + showName + "\"";
+        String query = "DELETE FROM " + TABLE_NAME + " WHERE " + COLUMN_SHOWID + "=" + id + ";";
         db.execSQL(query);
     }
 
     public void updateShow(Episode episode) {
         SQLiteDatabase database = getWritableDatabase();
-        String query = "UPDATE " + TABLE_NAME + " SET " + COLUMN_NAME + "=\"" + episode.getName() + "\" WHERE " +COLUMN_SHOWID + "=\"" + episode.getId() +"\" +" +
+        String query = "UPDATE " + TABLE_NAME + " SET " + COLUMN_NAME + "=\"" + episode.getName() + "\"" +
                 "AND " + COLUMN_NUMBER + "=\"" + episode.getNumber() + "\"" +
                 "AND " + COLUMN_URL + "=\"" + episode.getUrl() + "\""+
                 "AND " + COLUMN_NOTIFICATION + "=\"" + episode.getNotifications() + "\""+
                 "AND " + COLUMN_DAY + "=\"" + episode.getTime().getDay() + "\""+
                 "AND " + COLUMN_HOUR + "=\"" + episode.getTime().getHour() + "\""+
                 "AND " + COLUMN_TIMEOFDAY + "=\"" + episode.getTime().getTimeOfDay() + "\""+
-                "AND " + COLUMN_TIMEPREVIEW + "=\"" + episode.getTime().getTimePreview() + "\"";
+                "AND " + COLUMN_TIMEPREVIEW + "=\"" + episode.getTime().getTimePreview() + "\"" +
+                "AND " + COLUMN_LISTID + "=\"" + episode.getListId() + "\" WHERE " +COLUMN_SHOWID + "=\"" + episode.getId() +"\"";
         database.execSQL(query);
     }
 

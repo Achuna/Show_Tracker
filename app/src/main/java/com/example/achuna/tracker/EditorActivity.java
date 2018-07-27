@@ -207,6 +207,7 @@ public class EditorActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         Toast.makeText(getApplicationContext(), "\"" + showName.getText() + "\" has been deleted", Toast.LENGTH_LONG).show();
+                        database.deleteShow(MainActivity.list.get(listItem).getId());
                         MainActivity.list.remove(listItem);
                         //saveData();
                         saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
@@ -227,6 +228,7 @@ public class EditorActivity extends Activity {
                     public void onClick(DialogInterface dialogInterface, int i) {
                         Intent startMain = new Intent(getApplicationContext(), MainActivity.class);
                         MainActivity.list.get(listItem).setListId(2);
+                        database.updateShow(MainActivity.list.get(listItem));
                         MainActivity.planList.add(MainActivity.list.get(listItem));
                         MainActivity.list.remove(listItem);
 //                        saveData();
@@ -273,6 +275,7 @@ public class EditorActivity extends Activity {
                             int number = Integer.parseInt(episodeNumber.getText().toString());
                             String url = urlText.getText().toString();
                             int id = (int) System.currentTimeMillis();
+                            id = Math.abs(id);
                             final Episode newShow  = new Episode(name, number, url, notifyCheckbox.isChecked(), time, id, 1);
 
                             database.addShow(newShow);
@@ -310,10 +313,7 @@ public class EditorActivity extends Activity {
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     newShow.setListId(2);
                                     database.updateShow(newShow);
-                                    MainActivity.list.add(newShow);
-                                    int newIndex = MainActivity.list.indexOf(newShow);
-                                    MainActivity.planList.add(MainActivity.list.get(newIndex));
-                                    MainActivity.list.remove(newIndex);
+                                    MainActivity.planList.add(newShow);
 //                                    saveData();
 //                                    SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
 //                                    SharedPreferences.Editor editor = preferences.edit();
@@ -440,6 +440,7 @@ public class EditorActivity extends Activity {
                     public void onClick(DialogInterface dialogInterface, int i) {
                         Toast.makeText(getApplicationContext(), "Congrats on finishing \"" + showName.getText() + "\"!", Toast.LENGTH_LONG).show();
                         MainActivity.list.get(listItem).setListId(3);
+                        database.updateShow(MainActivity.list.get(listItem));
                         MainActivity.doneList.add(MainActivity.list.get(listItem));
                         MainActivity.list.remove(listItem);
 //                        saveDoneData();
@@ -467,6 +468,7 @@ public class EditorActivity extends Activity {
             public void onClick(View view) {
                 Intent startMain = new Intent(getApplicationContext(), MainActivity.class);
                 MainActivity.list.get(listItem).setListId(2);
+                database.updateShow(MainActivity.list.get(listItem));
                 MainActivity.planList.add(MainActivity.list.get(listItem));
                 MainActivity.list.remove(listItem);
                 //saveData();
@@ -601,7 +603,7 @@ public class EditorActivity extends Activity {
     }
 
     public void saveAllData(ArrayList<Episode> a, ArrayList<Episode> b, ArrayList<Episode> c) {
-        database.clearShows();
+        if (((a.size() + b.size() + c.size()) > 0)) database.clearShows();
         for (int i = 0; i < a.size(); i++) {
             database.addShow(a.get(i));
         }

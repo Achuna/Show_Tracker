@@ -88,6 +88,7 @@ public class Done extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int j) {
                         MainActivity.doneList.get(listItem).setListId(1);
+                        database.updateShow(MainActivity.doneList.get(listItem));
                         MainActivity.list.add(MainActivity.doneList.get(listItem));
                         MainActivity.doneList.remove(listItem);
                         Intent toMain = new Intent(getApplicationContext(), MainActivity.class);
@@ -108,6 +109,7 @@ public class Done extends AppCompatActivity {
                 builder.setNegativeButton("Permanently Delete", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
+                        database.deleteShow(MainActivity.doneList.get(listItem).getId());
                         MainActivity.doneList.remove(listItem);
                         Intent toMain = new Intent(getApplicationContext(), MainActivity.class);
                         //saveDoneData();
@@ -151,7 +153,7 @@ public class Done extends AppCompatActivity {
     }
 
     public void saveAllData(ArrayList<Episode> a, ArrayList<Episode> b, ArrayList<Episode> c) {
-        database.clearShows();
+        if (((a.size() + b.size() + c.size()) > 0)) database.clearShows();
         for (int i = 0; i < a.size(); i++) {
             database.addShow(a.get(i));
         }

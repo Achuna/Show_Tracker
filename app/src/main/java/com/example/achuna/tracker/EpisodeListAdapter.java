@@ -28,6 +28,7 @@ public class EpisodeListAdapter extends ArrayAdapter<String> {
         super(context, R.layout.episode_list);
         this.shows = show;
         this.darkTheme = darkTheme;
+        this.context = context;
         database = new SQLiteHandler(context, null, null, 1);
     }
 

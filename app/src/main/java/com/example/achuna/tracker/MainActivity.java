@@ -34,6 +34,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -180,8 +182,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         //Preparing Lists
 
-
-
 //        list = loadListData();
 //        doneList = loadDoneData();
 //        planList = loadPlanData();
@@ -225,32 +225,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-
-    @Override
-    protected void onStop() {
-        for (int i = 0; i < list.size(); i++) {
-            if(list.get(i).notifications) {
-                setAlarm(list.get(i));
-            } else {
-                cancelAlarm(list.get(i));
-            }
-        }
-
-//        saveListData(list);
-//        saveDoneData();
-//        saveLaterData();
-
-        saveAllData(list, planList, doneList);
-
-
-
-        SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
-        SharedPreferences.Editor urlEditor = streaming.edit();
-        urlEditor.putString("url", streamUrl);
-        urlEditor.apply();
-
-        super.onStop();
-    }
 
 
     public void cancelAlarm(Episode show) {
@@ -329,7 +303,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void saveAllData(ArrayList<Episode> a, ArrayList<Episode> b, ArrayList<Episode> c) {
-        database.clearShows();
+       if (((a.size() + b.size() + c.size()) > 0)) database.clearShows();
         for (int i = 0; i < a.size(); i++) {
             database.addShow(a.get(i));
         }
@@ -338,6 +312,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         for (int i = 0; i < c.size(); i++) {
             database.addShow(c.get(i));
+        }
+    }
+
+    public boolean canConnect(String url, int timeout) {
+        try{
+            URL myUrl = new URL(url);
+            URLConnection connection = myUrl.openConnection();
+            connection.setConnectTimeout(timeout);
+            connection.connect();
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 
@@ -525,6 +511,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
 
                 break;
+            case R.id.databaseMenu:
+                AlertDialog.Builder dbConfig = new AlertDialog.Builder(this);
+                dbConfig.setTitle("Database Backup");
+                dbConfig.setMessage("Last Backup: \n\n" + "INPUT DATE HERE");
+                dbConfig.setPositiveButton("Backup", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+                dbConfig.setNegativeButton("Rewrite Data", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                            AlertDialog.Builder inner = new AlertDialog.Builder(MainActivity.this);
+                            inner.setTitle("Rewrite?");
+                            inner.setMessage("This will delete all list data and replace it data from database. Continue?");
+                            inner.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                    dialog.dismiss();
+                                }
+                            });
+                            inner.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                    dialog.dismiss();
+                                }
+                            });
+                            AlertDialog rewriteDialog = inner.create();
+                            rewriteDialog.show();
+
+                        dialog.dismiss();
+                    }
+                });
+                AlertDialog dialog1 = dbConfig.create();
+                dialog1.show();
+
+                break;
         }
         return true;
     }
@@ -569,6 +596,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
         }
         return true;
+    }
+
+
+    @Override
+    protected void onStop() {
+        for (int i = 0; i < list.size(); i++) {
+            if(list.get(i).notifications) {
+                setAlarm(list.get(i));
+            } else {
+                cancelAlarm(list.get(i));
+            }
+        }
+//        saveListData(list);
+//        saveDoneData();
+//        saveLaterData();
+
+        saveAllData(list, planList, doneList);
+
+        SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
+        SharedPreferences.Editor urlEditor = streaming.edit();
+        urlEditor.putString("url", streamUrl);
+        urlEditor.apply();
+
+        super.onStop();
     }
 
     @Override
