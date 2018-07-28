@@ -531,7 +531,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             inner.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-
+                                    DatabaseConnection connection = new DatabaseConnection(MainActivity.this);
+                                    connection.execute("rewrite");
                                     dialog.dismiss();
                                 }
                             });

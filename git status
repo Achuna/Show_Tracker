@@ -1,0 +1,71 @@
+[33mcommit 1b1ccf063f51543e5e379ac8911d107c9b592d81[m[33m ([m[1;36mHEAD -> [m[1;32mData_Stability[m[33m)[m
+Author: Achuna <achunaofonedu@gmail.com>
+Date:   Fri Jul 27 19:36:54 2018 -0400
+
+    sqlite functional and beginning of database connection
+
+[33mcommit 541c352c105a4cd5879d779b484e286d1a2dc492[m[33m ([m[1;31morigin/Data_Stability[m[33m)[m
+Author: Achuna <achunaofonedu@gmail.com>
+Date:   Wed Jul 25 11:33:43 2018 -0400
+
+    Adding database functionality
+
+[33mcommit b8217d890ce0d6a44f8610c545eadeccbcda3cc1[m[33m ([m[1;32mmaster[m[33m)[m
+Author: Achuna <achunaofonedu@gmail.com>
+Date:   Wed Jul 25 11:12:03 2018 -0400
+
+    Adding database functionality
+
+[33mcommit d5effd0ee6c1bf30fa705e7ade503b100b330ff6[m[33m ([m[1;31morigin/master[m[33m)[m
+Author: Achuna <achunaofonedu@gmail.com>
+Date:   Mon Jul 23 14:44:26 2018 -0400
+
+    Upgraded Editor Activity with clipboard management
+
+[33mcommit e4f07539383fce013b7198b381b2667d6280e0a0[m
+Author: Achuna <achunaofonedu@gmail.com>
+Date:   Wed Jun 6 19:38:24 2018 -0400
+
+    Added more options for streaming
+
+[33mcommit 971fab4c038ef29bd18e6a49b77096ab6eff1c9c[m
+Author: Achuna <achunaofonedu@gmail.com>
+Date:   Wed Jun 6 19:37:36 2018 -0400
+
+    Added more options for streaming
+
+[33mcommit 177a715899fa4b7e5c8a6bf77b3e2ddf7b9cba75[m
+Author: Achuna <achunaofonedu@gmail.com>
+Date:   Sat May 5 21:42:40 2018 -0400
+
+    Initial Commit
+
+[33mcommit a42049ef322d63d88d8c9f9e45ed75675f495c26[m
+Author: Achuna <achunaofonedu@gmail.com>
+Date:   Sat May 5 21:37:09 2018 -0400
+
+    Initial Commit
+
+[33mcommit f0e5c00dacc61db9e69fe8a9c709f64bf3f98a5d[m[33m ([m[1;32mtmp[m[33m)[m
+Author: Achuna <achunaofonedu@gmail.com>
+Date:   Sat May 5 21:28:34 2018 -0400
+
+    Initial Commit
+
+[33mcommit aef00e4c5b51f6bb8cd0a530db2a67d844c71554[m
+Author: Achuna <achunaofonedu@gmail.com>
+Date:   Thu Mar 8 22:16:01 2018 -0500
+
+    Editor UI improvements
+
+[33mcommit 53ea0574608be6da7f4090da1a2db58743f27044[m
+Author: Achuna <achunaofonedu@gmail.com>
+Date:   Thu Mar 8 22:00:44 2018 -0500
+
+    Alert Notification Improvements
+
+[33mcommit d999bc91dc29b55ad765c89a8bda84e773e8bd6b[m
+Author: Achuna <achunaofonedu@gmail.com>
+Date:   Thu Mar 8 21:20:15 2018 -0500
+
+    Initial commit
