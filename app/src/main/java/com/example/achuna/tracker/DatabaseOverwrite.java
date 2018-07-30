@@ -22,39 +22,31 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
-public class DatabaseConnection extends AsyncTask<String, Void, ArrayList<Episode>> {
+public class DatabaseRewrite extends AsyncTask<Void, Void, ArrayList<Episode>> {
 
     Context context;
     SQLiteHandler database;
-
+    AsyncResponse delegate = null;
 
     public interface AsyncResponse {
         void processFinished(ArrayList<Episode> shows);
     }
 
-    public DatabaseConnection(Context context) {
+    public DatabaseRewrite(Context context, AsyncResponse delegate) {
         this.context = context;
+        this.delegate = delegate;
         database = new SQLiteHandler(context, null, null, 1);
     }
 
     @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-    }
+    protected ArrayList<Episode> doInBackground(Void... params) {
 
-    @Override
-    protected ArrayList<Episode> doInBackground(String... params) {
-
-        String getUrl = "http://10.0.2.2/Shows/get.php";
-        String updateUrl = "http://10.0.2.2/Shows/update.php";
+        String url = "http://10.0.2.2/Shows/get.php";
 
         ArrayList<Episode> allShows = new ArrayList<>();
 
-
-        if(params[0].equals("rewrite")) {
-            database.clearShows();
             try {
-                URL get = new URL(getUrl);
+                URL get = new URL(url);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) get.openConnection();
                 //Set params for the connection
                 httpURLConnection.setDoInput(true);
@@ -89,6 +81,8 @@ public class DatabaseConnection extends AsyncTask<String, Void, ArrayList<Episod
                     Log.i("JSON", allShows.get(i).toString());
                 }
 
+                if(allShows.size() > 0) database.clearShows();
+
                 return allShows;
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -97,9 +91,6 @@ public class DatabaseConnection extends AsyncTask<String, Void, ArrayList<Episod
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        } else {
-
-        }
 
 
         return null;
@@ -107,6 +98,6 @@ public class DatabaseConnection extends AsyncTask<String, Void, ArrayList<Episod
 
     @Override
     protected void onPostExecute(ArrayList<Episode> episodes) {
-
+        delegate.processFinished(episodes);
     }
 }
