@@ -22,7 +22,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
-public class DatabaseRewrite extends AsyncTask<Void, Void, ArrayList<Episode>> {
+public class DatabaseOverwrite extends AsyncTask<Void, Void, ArrayList<Episode>> {
 
     Context context;
     SQLiteHandler database;
@@ -32,7 +32,7 @@ public class DatabaseRewrite extends AsyncTask<Void, Void, ArrayList<Episode>> {
         void processFinished(ArrayList<Episode> shows);
     }
 
-    public DatabaseRewrite(Context context, AsyncResponse delegate) {
+    public DatabaseOverwrite(Context context, AsyncResponse delegate) {
         this.context = context;
         this.delegate = delegate;
         database = new SQLiteHandler(context, null, null, 1);

@@ -8,7 +8,7 @@ public class Episode {
 
     private String name, url;
     private int number;
-    boolean notifications;
+    private boolean notifications;
     private Time time;
     private int id;
     private int listId; //1: Main list, 2: Plan to Watch, 3: Done
@@ -87,8 +87,9 @@ public class Episode {
                 ", number=" + number +
                 ", notifications=" + notifications +
                 ", time=" + time +
+                ", id=" + id +
+                ", listId=" + listId +
                 '}';
     }
-
 }
 

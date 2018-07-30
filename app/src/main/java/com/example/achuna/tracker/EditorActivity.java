@@ -27,6 +27,8 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 
 import java.net.URI;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -115,7 +117,7 @@ public class EditorActivity extends Activity {
             editingExitingShow = Boolean.parseBoolean(extras.get("Editing").toString());
             if(editingExitingShow) {
                 listItem = (int) extras.get("ListItem");
-                if(MainActivity.list.get(listItem).notifications)
+                if(MainActivity.list.get(listItem).getNotifications())
                     time = MainActivity.list.get(listItem).getTime();
                 Log.i("Item", extras.get("ListItem") +"");
                 notifyCheckbox.setChecked(MainActivity.list.get(listItem).getNotifications());
@@ -154,7 +156,7 @@ public class EditorActivity extends Activity {
                 timePreview.setDay(i+1);
                 time.setDay(i+1);
                 if(editingExitingShow) {
-                    if(MainActivity.list.get(listItem).notifications)
+                    if(MainActivity.list.get(listItem).getNotifications())
                         timePreview.setHour(time.getHour());
                 }
                 notificationTime.setText(timePreview.toString());
@@ -171,7 +173,7 @@ public class EditorActivity extends Activity {
                 int timeOfDay = (getHours().get(i).contains("AM")) ? 0 : 1;
                 timePreview.setTimeOfDay(timeOfDay);
                 if(editingExitingShow) {
-                    if(MainActivity.list.get(listItem).notifications)
+                    if(MainActivity.list.get(listItem).getNotifications())
                         timePreview.setDay(time.getDay());
                 }
                 notificationTime.setText(timePreview.toString());
@@ -297,7 +299,7 @@ public class EditorActivity extends Activity {
                                     MainActivity.list.add(newShow);
                                     int newIndex = MainActivity.list.indexOf(newShow);
 
-                                    if(newShow.notifications) {
+                                    if(newShow.getNotifications()) {
                                         setAlarm(MainActivity.list.get(newIndex));
                                     } else {
                                         cancelAlarm(MainActivity.list.get(newIndex));
@@ -340,7 +342,7 @@ public class EditorActivity extends Activity {
                             MainActivity.list.get(listItem).setNotifications(notifyCheckbox.isChecked());
                             MainActivity.list.get(listItem).setTime(time);
 
-                            if(MainActivity.list.get(listItem).notifications) {
+                            if(MainActivity.list.get(listItem).getNotifications()) {
                                 setAlarm(MainActivity.list.get(listItem));
                             } else {
                                 cancelAlarm(MainActivity.list.get(listItem));
@@ -583,24 +585,47 @@ public class EditorActivity extends Activity {
 //        editor.apply();
 //    }
 
-    public void loadAllData() {
-        Cursor data = database.getData();
-        MainActivity.list.clear();
-        MainActivity.planList.clear();
-        MainActivity.doneList.clear();
-        while(data.moveToNext()) {
-            if(data.getInt(10) == 1) {
-                MainActivity.list.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
-                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
-            } else if(data.getInt(10) == 2) {
-                MainActivity.planList.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
-                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
-            } else {
-                MainActivity.doneList.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
-                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
-            }
+    public void backup() {
+
+        ArrayList<DataObject> shows = new ArrayList<>();
+        for (int i = 0; i < MainActivity.list.size(); i++) {
+            int notifications = (MainActivity.list.get(i).getNotifications())? 1:0;
+            shows.add(new DataObject(MainActivity.list.get(i).getName(), MainActivity.list.get(i).getNumber(), MainActivity.list.get(i).getUrl(), notifications, MainActivity.list.get(i).getTime().getDay(), MainActivity.list.get(i).getTime().getHour(), MainActivity.list.get(i).getTime().getTimeOfDay(),
+                    MainActivity.list.get(i).getTime().getTimePreview(), MainActivity.list.get(i).getId(), MainActivity.list.get(i).getListId()));
         }
+        for (int i = 0; i < MainActivity.planList.size(); i++) {
+            int notifications = (MainActivity.planList.get(i).getNotifications())? 1:0;
+            shows.add(new DataObject(MainActivity.planList.get(i).getName(), MainActivity.planList.get(i).getNumber(), MainActivity.planList.get(i).getUrl(), notifications, MainActivity.planList.get(i).getTime().getDay(), MainActivity.planList.get(i).getTime().getHour(), MainActivity.planList.get(i).getTime().getTimeOfDay(),
+                    MainActivity.planList.get(i).getTime().getTimePreview(), MainActivity.planList.get(i).getId(), MainActivity.planList.get(i).getListId()));
+        }
+        for (int i = 0; i < MainActivity.doneList.size(); i++) {
+            int notifications = (MainActivity.doneList.get(i).getNotifications())? 1:0;
+            shows.add(new DataObject(MainActivity.doneList.get(i).getName(), MainActivity.doneList.get(i).getNumber(), MainActivity.doneList.get(i).getUrl(), notifications, MainActivity.doneList.get(i).getTime().getDay(), MainActivity.doneList.get(i).getTime().getHour(), MainActivity.doneList.get(i).getTime().getTimeOfDay(),
+                    MainActivity.doneList.get(i).getTime().getTimePreview(), MainActivity.doneList.get(i).getId(), MainActivity.doneList.get(i).getListId()));
+        }
+
+        new DatabaseBackup(EditorActivity.this, new DatabaseBackup.AsyncResponse() {
+            @Override
+            public void processFinished(boolean result) {
+                if (result) {
+                    SharedPreferences backup = getSharedPreferences("Backup Time", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = backup.edit();
+
+                    Calendar calendar = Calendar.getInstance();
+                    String currentDate = DateFormat.getDateInstance().format(calendar.getTime());
+
+                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm a");
+                    String time = simpleDateFormat.format(calendar.getTime());
+
+                    String date = currentDate + " at " + time;
+
+                    editor.putString("time", date);
+                    editor.apply();
+                }
+            }
+        }).execute(shows);
     }
+
 
     public void saveAllData(ArrayList<Episode> a, ArrayList<Episode> b, ArrayList<Episode> c) {
         if (((a.size() + b.size() + c.size()) > 0)) database.clearShows();
@@ -630,17 +655,15 @@ public class EditorActivity extends Activity {
 
     @Override
     protected void onStop() {
-//        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-//        SharedPreferences.Editor editor = preferences.edit();
-//        Gson gson = new Gson();
-//        String json = gson.toJson(MainActivity.planList);
-//        editor.putString("Plan List", json);
-//        editor.apply();
-//        saveDoneData();
-//        saveData();
-
         saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
-
+        backup();
         super.onStop();
+    }
+
+    @Override
+    protected void onRestart() {
+        Intent goBack = new Intent(this, MainActivity.class);
+        startActivity(goBack);
+        super.onRestart();
     }
 }

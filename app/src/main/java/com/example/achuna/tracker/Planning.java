@@ -16,7 +16,10 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class Planning extends AppCompatActivity {
 
@@ -90,13 +93,7 @@ public class Planning extends AppCompatActivity {
                         MainActivity.list.add(MainActivity.planList.get(listItem));
                         MainActivity.planList.remove(listItem);
                         Intent toMain = new Intent(getApplicationContext(), MainActivity.class);
-//                        savePlanData();
-//                        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
-//                        SharedPreferences.Editor editor = preferences.edit();
-//                        Gson gson = new Gson();
-//                        String json = gson.toJson(MainActivity.list);
-//                        editor.putString("List", json);
-//                        editor.apply();
+
                         saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
 
                         startActivity(toMain);
@@ -118,9 +115,51 @@ public class Planning extends AppCompatActivity {
 
     }
 
+    public void backup() {
+
+        ArrayList<DataObject> shows = new ArrayList<>();
+        for (int i = 0; i < MainActivity.list.size(); i++) {
+            int notifications = (MainActivity.list.get(i).getNotifications())? 1:0;
+            shows.add(new DataObject(MainActivity.list.get(i).getName(), MainActivity.list.get(i).getNumber(), MainActivity.list.get(i).getUrl(), notifications, MainActivity.list.get(i).getTime().getDay(), MainActivity.list.get(i).getTime().getHour(), MainActivity.list.get(i).getTime().getTimeOfDay(),
+                    MainActivity.list.get(i).getTime().getTimePreview(), MainActivity.list.get(i).getId(), MainActivity.list.get(i).getListId()));
+        }
+        for (int i = 0; i < MainActivity.planList.size(); i++) {
+            int notifications = (MainActivity.planList.get(i).getNotifications())? 1:0;
+            shows.add(new DataObject(MainActivity.planList.get(i).getName(), MainActivity.planList.get(i).getNumber(), MainActivity.planList.get(i).getUrl(), notifications, MainActivity.planList.get(i).getTime().getDay(), MainActivity.planList.get(i).getTime().getHour(), MainActivity.planList.get(i).getTime().getTimeOfDay(),
+                    MainActivity.planList.get(i).getTime().getTimePreview(), MainActivity.planList.get(i).getId(), MainActivity.planList.get(i).getListId()));
+        }
+        for (int i = 0; i < MainActivity.doneList.size(); i++) {
+            int notifications = (MainActivity.doneList.get(i).getNotifications())? 1:0;
+            shows.add(new DataObject(MainActivity.doneList.get(i).getName(), MainActivity.doneList.get(i).getNumber(), MainActivity.doneList.get(i).getUrl(), notifications, MainActivity.doneList.get(i).getTime().getDay(), MainActivity.doneList.get(i).getTime().getHour(), MainActivity.doneList.get(i).getTime().getTimeOfDay(),
+                    MainActivity.doneList.get(i).getTime().getTimePreview(), MainActivity.doneList.get(i).getId(), MainActivity.doneList.get(i).getListId()));
+        }
+
+        new DatabaseBackup(Planning.this, new DatabaseBackup.AsyncResponse() {
+            @Override
+            public void processFinished(boolean result) {
+                if (result) {
+                    SharedPreferences backup = getSharedPreferences("Backup Time", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = backup.edit();
+
+                    Calendar calendar = Calendar.getInstance();
+                    String currentDate = DateFormat.getDateInstance().format(calendar.getTime());
+
+                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm a");
+                    String time = simpleDateFormat.format(calendar.getTime());
+
+                    String date = currentDate + " at " + time;
+
+                    editor.putString("time", date);
+                    editor.apply();
+                }
+            }
+        }).execute(shows);
+    }
+
     @Override
     protected void onStop() {
         saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
+        backup();
         super.onStop();
     }
 
@@ -156,23 +195,4 @@ public class Planning extends AppCompatActivity {
         }
     }
 
-//    private ArrayList<Episode> loadPlanData() {
-//        ArrayList<Episode> a = new ArrayList<>();
-//        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-//        Gson gson = new Gson();
-//        String json = preferences.getString("Plan List", null);
-//        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
-//        a = gson.fromJson(json, type);
-//        if (a == null) a = new ArrayList<Episode>();
-//        return a;
-//    }
-//
-//    private void savePlanData() {
-//        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-//        SharedPreferences.Editor editor = preferences.edit();
-//        Gson gson = new Gson();
-//        String json = gson.toJson(MainActivity.planList);
-//        editor.putString("Plan List", json);
-//        editor.apply();
-//    }
 }

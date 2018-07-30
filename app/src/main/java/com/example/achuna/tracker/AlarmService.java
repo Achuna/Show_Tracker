@@ -69,7 +69,7 @@ public class AlarmService extends Service {
 
             for (int i = 0; i < list.size(); i++) {
 
-                if(list.get(i).notifications) {
+                if(list.get(i).getNotifications()) {
 
                     AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
 
