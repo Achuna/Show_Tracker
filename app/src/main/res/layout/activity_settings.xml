@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="22dp"
+        android:layout_marginTop="11dp"
         android:text="Settings"
         android:textSize="30sp"
         tools:layout_editor_absoluteX="163dp"
@@ -21,18 +21,18 @@
         android:id="@+id/themeSwitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/settingsTitle"
+        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="30dp"
-        android:text="Dark Theme                        " />
+        android:layout_marginTop="121dp"
+        android:text="Dark Theme       " />
 
     <EditText
         android:id="@+id/settingsListNameEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:layout_alignStart="@+id/settingsTitle"
-        android:layout_below="@+id/themeSwitch"
-        android:layout_marginTop="35dp"
+        android:layout_marginTop="167dp"
         android:ems="10"
         android:inputType="textPersonName"
         android:singleLine="true"
@@ -97,5 +97,41 @@
         android:layout_marginTop="18dp"
         android:text="Current Application Color: "
         android:textSize="15sp" />
+
+    <RadioGroup
+        android:id="@+id/radioButtonStorageGroup"
+        android:layout_width="224dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/themeSwitch"
+        android:layout_marginStart="19dp"
+        android:layout_marginTop="63dp"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/webServerRB"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:checked="true"
+            android:duplicateParentState="false"
+            android:text="Web Server" />
+
+        <RadioButton
+            android:id="@+id/localHostRB"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Localhost" />
+    </RadioGroup>
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/textView3"
+        android:layout_marginTop="71dp"
+        android:text="Data Storage:" />
 
 </RelativeLayout>

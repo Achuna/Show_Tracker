@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     static ArrayList<Episode> planList = new ArrayList<>();
 
     static String toolbarTitle = "Tracker",listTitle ="Your Shows",appColor ="Blue";
-    String streamUrl = "https://keep.google.com";
+    static String streamUrl = "https://otakustream.tv/";
     static boolean darkTheme;
     String backupTime = "0 Backups Found";
     static String localhostIP = "";
@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         backupTime = backup.getString("time", backupTime);
 
         SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
-        streamUrl = streaming.getString("url", "https://keep.google.com");
+        streamUrl = streaming.getString("url", streamUrl);
         
         SharedPreferences settings = getSharedPreferences("Titles", MODE_PRIVATE);
         toolbarTitle = settings.getString("header", toolbarTitle);
@@ -480,18 +480,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case R.id.menuURL:
                 try {
-                    if(streamUrl.toLowerCase().contains("anime")) {
-                        try {
-                            Intent openMAL = getPackageManager().getLaunchIntentForPackage("net.myanimelist");
-                            startActivity(openMAL);
-                        } catch (Exception e) {
-                            Intent openStream = new Intent(Intent.ACTION_VIEW, Uri.parse(streamUrl));
-                            startActivity(openStream);
-                        }
-                    } else {
                         Intent openStream = new Intent(Intent.ACTION_VIEW, Uri.parse(streamUrl));
+                        openStream.setPackage("com.hsv.freeadblockerbrowser");
                         startActivity(openStream);
-                    }
+
                 } catch (Exception e) {
                     Toast.makeText(MainActivity.this, "Problem launching streaming url", Toast.LENGTH_SHORT).show();
                     final AlertDialog.Builder builder2 = new AlertDialog.Builder(MainActivity.this);
@@ -503,8 +495,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                     builder2.setMessage("Enter the url of your favorite streaming service");
 
-
-                    //son of a b I hate
                     final EditText input2 = new EditText(MainActivity.this);
                     input2.setInputType(InputType.TYPE_CLASS_TEXT);
                     input2.setEms(10);
@@ -536,7 +526,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.databaseMenu:
                 AlertDialog.Builder dbConfig = new AlertDialog.Builder(this);
                 dbConfig.setTitle("Database Backup");
-                dbConfig.setMessage("Last Backup: \n\n" + getBackupTime() + "\n");
+                String location = (dataStorage==1)? "Web Server" : "Localhost (" + localhostIP + ")";
+                dbConfig.setMessage("Last Backup: " +location+ " \n\n" + getBackupTime() + "\n");
                 dbConfig.setPositiveButton("Backup", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -613,19 +604,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(settingsIntent);
                 break;
             case R.id.drawerKeep:
-                //open keep
-                sideBar.closeDrawers();
+                try {
+                    Intent openMAL = getPackageManager().getLaunchIntentForPackage("net.myanimelist");
+                    startActivity(openMAL);
+                } catch (Exception e) {
+                    Intent animeList = new Intent(Intent.ACTION_VIEW, Uri.parse("https://myanimelist.net/"));
+                    startActivity(animeList);
+                }
 
-                    Intent openBrowser = new Intent(Intent.ACTION_VIEW, Uri.parse("https://keep.google.com"));
-                    if (openBrowser != null) {
-                        try {
-                            startActivity(openBrowser);
-                        } catch (Exception e) {
-                            Toast.makeText(getApplicationContext(), "Unable to Open Keep", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Unable to Open Keep", Toast.LENGTH_SHORT).show();
-                    }
                 break;
             case R.id.drawerFinished:
                 sideBar.closeDrawers();

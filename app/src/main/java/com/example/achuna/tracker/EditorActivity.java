@@ -142,6 +142,7 @@ public class EditorActivity extends Activity {
                     laterBtn.setCompoundDrawablesWithIntrinsicBounds(0,0,0, R.drawable.lightbulb_outline_black);
                 }
             } else {
+                urlText.setText(MainActivity.streamUrl);
                 doneBtn.setVisibility(View.INVISIBLE);
                 deleteBtn.setVisibility(View.INVISIBLE);
                 laterBtn.setVisibility(View.INVISIBLE);
