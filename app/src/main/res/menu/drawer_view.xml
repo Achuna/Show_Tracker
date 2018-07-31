@@ -19,6 +19,6 @@
         <item
             android:id="@+id/drawerKeep"
             android:icon="@drawable/google_keep_icon"
-            android:title="Open Google Keep" />
+            android:title="My Anime List" />
     </group>
 </menu>

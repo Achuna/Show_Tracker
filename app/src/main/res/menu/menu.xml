@@ -10,8 +10,14 @@
         />
 
     <item
+        android:id="@+id/databaseMenu"
+        android:title="Database Backup"
+        app:showAsAction="never"
+        />
+
+    <item
         android:id="@+id/menuURLEditor"
-        android:title="Stream Service URL"
+        android:title="Stream Service"
         app:showAsAction="never"
         />
 

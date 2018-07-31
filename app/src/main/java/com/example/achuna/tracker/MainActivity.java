@@ -6,12 +6,14 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -33,6 +35,10 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.net.URL;
+import java.net.URLConnection;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -44,10 +50,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ListView episodeList;
     Button addShow;
     TextView title, drawerTitle;
-
     DrawerLayout sideBar;
     ActionBarDrawerToggle sideBarToggle;
     NavigationView navigationView;
+    EpisodeListAdapter adapter;
+
+    SQLiteHandler database;
 
     static AlarmManager alarmManager;
 
@@ -56,12 +64,106 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     static ArrayList<Episode> doneList = new ArrayList<>();
     static ArrayList<Episode> planList = new ArrayList<>();
 
-    static String toolbarTitle = "Tracker",listTitle ="Episode List",appColor ="Blue";
-    String streamUrl = "https://keep.google.com";
+    static String toolbarTitle = "Tracker",listTitle ="Your Shows",appColor ="Blue";
+    static String streamUrl = "https://otakustream.tv/";
     static boolean darkTheme;
+    String backupTime = "0 Backups Found";
+    static String localhostIP = "";
+    static int dataStorage = 1; //1: Web server, 2: localhost
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        setUpPreferences();
+
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        ///////////SET UP USER PREFERENCES & LAYOUT/////////////
+        toolbar = findViewById(R.id.main_toolbar);
+        sideBar = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.nav_view);
+
+        setToolbarColors();
+
+        SharedPreferences storage = getSharedPreferences("Storage", MODE_PRIVATE);
+        localhostIP = storage.getString("ip", "");
+        dataStorage = storage.getInt("host", 1);
+
+        SharedPreferences backup = getSharedPreferences("Backup Time", MODE_PRIVATE);
+        backupTime = backup.getString("time", backupTime);
+
+        SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
+        streamUrl = streaming.getString("url", streamUrl);
+        
+        SharedPreferences settings = getSharedPreferences("Titles", MODE_PRIVATE);
+        toolbarTitle = settings.getString("header", toolbarTitle);
+        listTitle = settings.getString("list title", listTitle);
+        toolbar.setTitle(toolbarTitle);
+        setSupportActionBar(toolbar);
+
+        View header = navigationView.getHeaderView(0);
+        drawerTitle = header.findViewById(R.id.drawerTitle);
+        drawerTitle.setText(listTitle);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        sideBarToggle = new ActionBarDrawerToggle(this, sideBar, toolbar, R.string.open, R.string.close);
+        sideBarToggle.setDrawerSlideAnimationEnabled(false);
+        sideBar.addDrawerListener(sideBarToggle);
+        sideBarToggle.syncState();
+
+
+        addShow = findViewById(R.id.addShowButton);
+        episodeList = findViewById(R.id.episodeListView);
+        title = findViewById(R.id.episodeMainTitle);
+        title.setText(listTitle);
+
+        //////Preparing Lists//////
+
+        database = new SQLiteHandler(this, null, null, 1);
+
+        list = new ArrayList<>();
+        planList = new ArrayList<>();
+        doneList = new ArrayList<>();
+
+        loadAllData();
+
+        adapter = new EpisodeListAdapter(getApplicationContext(), list, darkTheme);
+
+
+
+        episodeList.setAdapter(adapter);
+        scheduleAlarms();
+
+        /////////////////////EVENT HANDLERS//////////////////////
+
+        episodeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Intent startEditor = new Intent(getApplicationContext(), EditorActivity.class);
+                startEditor.putExtra("Editing", true);
+                startEditor.putExtra("ListItem", i);
+                startActivity(startEditor);
+            }
+        });
+
+
+        addShow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent startEditor = new Intent(getApplicationContext(), EditorActivity.class);
+                startEditor.putExtra("Editing", false);
+                startActivity(startEditor);
+            }
+        });
+
+    }
+
+
+    //////////////////////////////////METHODS/////////////////////////////////////////
+
+
+    private void setUpPreferences() {
         SharedPreferences theme = getSharedPreferences("App Theme", MODE_PRIVATE);
         MainActivity.darkTheme = theme.getBoolean("main theme", false);
         SharedPreferences colorPref = getSharedPreferences("App Color", MODE_PRIVATE);
@@ -99,126 +201,100 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    }
 
 
-        toolbar = findViewById(R.id.main_toolbar);
-        sideBar = findViewById(R.id.drawer_layout);
-        navigationView = findViewById(R.id.nav_view);
-
-
+    public void setToolbarColors() {
         if (darkTheme == true) {
-            if (color.equals("Purple")) {
+            if (MainActivity.appColor.equals("Purple")) {
                 toolbar.setBackgroundColor(Color.parseColor("#401e56"));
-            } else if (color.equals("Yellow")) {
+            } else if (MainActivity.appColor.equals("Yellow")) {
                 toolbar.setBackgroundColor(Color.parseColor("#FFEB3B"));
-            } else if (color.equals("Red")) {
+            } else if (MainActivity.appColor.equals("Red")) {
                 toolbar.setBackgroundColor(Color.parseColor("#740600"));
-            } else if (color.equals("Green")) {
+            } else if (MainActivity.appColor.equals("Green")) {
                 toolbar.setBackgroundColor(Color.parseColor("#137400"));
-            } else if (color.equals("Orange")) {
+            } else if (MainActivity.appColor.equals("Orange")) {
                 toolbar.setBackgroundColor(Color.parseColor("#56481e"));
             } else {
                 toolbar.setBackgroundColor(Color.parseColor("#1e2756"));
             }
         } else {
-            if (color.equals("Purple")) {
+            if (MainActivity.appColor.equals("Purple")) {
                 toolbar.setBackgroundColor(Color.parseColor("#9000ff"));
-            } else if (color.equals("Yellow")) {
+            } else if (MainActivity.appColor.equals("Yellow")) {
                 toolbar.setBackgroundColor(Color.parseColor("#FFEB3B"));
-            } else if (color.equals("Red")) {
+            } else if (MainActivity.appColor.equals("Red")) {
                 toolbar.setBackgroundColor(Color.parseColor("#ff3e3b"));
-            } else if (color.equals("Green")) {
+            } else if (MainActivity.appColor.equals("Green")) {
                 toolbar.setBackgroundColor(Color.parseColor("#40e404"));
-            } else if (color.equals("Orange")) {
+            } else if (MainActivity.appColor.equals("Orange")) {
                 toolbar.setBackgroundColor(Color.parseColor("#ffb300"));
             } else {
                 toolbar.setBackgroundColor(Color.parseColor("#006aff"));
             }
         }
+    }
 
+    public void backup() {
 
-        SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
-        streamUrl = streaming.getString("url", "https://keep.google.com");
-        
-        
-        SharedPreferences settings = getSharedPreferences("Titles", MODE_PRIVATE);
-        toolbarTitle = settings.getString("header", toolbarTitle);
-        listTitle = settings.getString("list title", listTitle);
-
-        View header = navigationView.getHeaderView(0);
-        drawerTitle = header.findViewById(R.id.drawerTitle);
-        drawerTitle.setText(listTitle);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        sideBarToggle = new ActionBarDrawerToggle(this, sideBar, toolbar, R.string.open, R.string.close);
-        sideBarToggle.setDrawerSlideAnimationEnabled(false);
-        sideBar.addDrawerListener(sideBarToggle);
-        sideBarToggle.syncState();
-
-        toolbar.setTitle(toolbarTitle);
-        setSupportActionBar(toolbar);
-
-        addShow = findViewById(R.id.addShowButton);
-        episodeList = findViewById(R.id.episodeListView);
-        title = findViewById(R.id.episodeMainTitle);
-        title.setText(listTitle);
-
-        final EpisodeListAdapter adapter = new EpisodeListAdapter(getApplicationContext(), loadListData(), darkTheme);
-
-        //Preparing Lists
-        list = loadListData();
-        doneList = loadDoneData();
-        planList = loadPlanData();
-
-        episodeList.setAdapter(adapter);
-
-        scheduleAlarms();
-
-        episodeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        new DatabaseBackup(MainActivity.this, localhostIP, dataStorage, new DatabaseBackup.AsyncResponse() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Intent startEditor = new Intent(getApplicationContext(), EditorActivity.class);
-                startEditor.putExtra("Editing", true);
-                startEditor.putExtra("ListItem", i);
-                startActivity(startEditor);
+            public void processFinished(boolean result) {
+                if (result) setBackupTime();
             }
-        });
+        }).execute(getAllShows());
+    }
 
+    /**
+     * Sets the data and time that the most recent backup was made only if the
+     * backup was successful
+     *
+     */
+    public void setBackupTime() {
+        SharedPreferences backup = getSharedPreferences("Backup Time", MODE_PRIVATE);
+        SharedPreferences.Editor editor = backup.edit();
 
-        addShow.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent startEditor = new Intent(getApplicationContext(), EditorActivity.class);
-                startEditor.putExtra("Editing", false);
-                startActivity(startEditor);
-            }
-        });
+        Calendar calendar = Calendar.getInstance();
+        String currentDate = DateFormat.getDateInstance().format(calendar.getTime());
 
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm a");
+        String time = simpleDateFormat.format(calendar.getTime());
+
+        String date = currentDate + " at " + time;
+
+        editor.putString("time", date);
+        editor.apply();
+    }
+
+    public String getBackupTime() {
+        SharedPreferences backup = getSharedPreferences("Backup Time", MODE_PRIVATE);
+        return backup.getString("time", backupTime);
     }
 
 
-    @Override
-    protected void onStop() {
+    /**
+     * Returns all shows in a DataObject Format (Easier for JSON to read)
+     * @return
+     */
+    public ArrayList<DataObject> getAllShows() {
+        ArrayList<DataObject> shows = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
-            if(list.get(i).notifications) {
-                setAlarm(list.get(i));
-            } else {
-                cancelAlarm(list.get(i));
-            }
+            int notifications = (list.get(i).getNotifications())? 1:0;
+            shows.add(new DataObject(list.get(i).getName(), list.get(i).getNumber(), list.get(i).getUrl(), notifications, list.get(i).getTime().getDay(), list.get(i).getTime().getHour(), list.get(i).getTime().getTimeOfDay(),
+                    list.get(i).getTime().getTimePreview(), list.get(i).getId(), list.get(i).getListId()));
         }
-
-        saveListData(list);
-        saveDoneData();
-        saveLaterData();
-
-        SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
-        SharedPreferences.Editor urlEditor = streaming.edit();
-        urlEditor.putString("url", streamUrl);
-        urlEditor.apply();
-
-        super.onStop();
+        for (int i = 0; i < planList.size(); i++) {
+            int notifications = (planList.get(i).getNotifications())? 1:0;
+            shows.add(new DataObject(planList.get(i).getName(), planList.get(i).getNumber(), planList.get(i).getUrl(), notifications, planList.get(i).getTime().getDay(), planList.get(i).getTime().getHour(), planList.get(i).getTime().getTimeOfDay(),
+                    planList.get(i).getTime().getTimePreview(), planList.get(i).getId(), planList.get(i).getListId()));
+        }
+        for (int i = 0; i < doneList.size(); i++) {
+            int notifications = (doneList.get(i).getNotifications())? 1:0;
+            shows.add(new DataObject(doneList.get(i).getName(), doneList.get(i).getNumber(), doneList.get(i).getUrl(), notifications, doneList.get(i).getTime().getDay(), doneList.get(i).getTime().getHour(), doneList.get(i).getTime().getTimeOfDay(),
+                    doneList.get(i).getTime().getTimePreview(), doneList.get(i).getId(), doneList.get(i).getListId()));
+        }
+        return shows;
     }
 
 
@@ -275,71 +351,67 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    ////////////////////SAVING LIST DATA//////////////////////
+    ////////////////////DATA METHODS//////////////////////
 
-    public void saveListData(ArrayList<Episode> a) {
-        //Converting arraylist into json format
-        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(a);
-        editor.putString("List", json);
-        editor.apply();
+
+    public void loadAllData() {
+        Cursor data = database.getData();
+        list.clear();
+        planList.clear();
+        doneList.clear();
+        while(data.moveToNext()) {
+            if(data.getInt(10) == 1) {
+                list.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+            } else if(data.getInt(10) == 2) {
+                planList.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+            } else {
+                doneList.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                        new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+            }
+        }
     }
 
-    private void saveDoneData() {
-        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(MainActivity.doneList);
-        editor.putString("Done List", json);
-        editor.apply();
+    public void saveAllData(ArrayList<Episode> a, ArrayList<Episode> b, ArrayList<Episode> c) {
+       if (((a.size() + b.size() + c.size()) > 0)) database.clearShows();
+        for (int i = 0; i < a.size(); i++) {
+            database.addShow(a.get(i));
+        }
+        for (int i = 0; i < b.size(); i++) {
+            database.addShow(b.get(i));
+        }
+        for (int i = 0; i < c.size(); i++) {
+            database.addShow(c.get(i));
+        }
     }
 
-    private void saveLaterData() {
-        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(MainActivity.planList);
-        editor.putString("Plan List", json);
-        editor.apply();
+    public void overwriteData(ArrayList<Episode> shows) {
+        if (shows.size() > 0 && shows != null) {
+            list.clear();
+            planList.clear();
+            doneList.clear();
+            for (int i = 0; i < shows.size(); i++) {
+                Episode show = shows.get(i);
+                database.addShow(show);
+                if (show.getListId() == 1) {
+                    list.add(show);
+                } else if (show.getListId() == 2) {
+                    planList.add(show);
+                } else {
+                    doneList.add(show);
+                }
+            }
+            Toast.makeText(this, "Data Rewrite Successful", Toast.LENGTH_SHORT).show();
+            adapter.notifyDataSetChanged();
+        } else {
+            Toast.makeText(this, "Error Rewriting Data", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    /////////////////LOADING LIST DATA//////////////////////
 
-    public ArrayList<Episode> loadListData() {
-        ArrayList<Episode> a = new ArrayList<>();
-        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
-        Gson gson = new Gson(); //Using Gson library to make the list data into a string json text
-        String json = preferences.getString("List", null);
-        Type type = new TypeToken<ArrayList<Episode>>() {
-        }.getType();
-        a = gson.fromJson(json, type);
-        if (a == null) a = new ArrayList<Episode>();
-        return a;
-    }
+    ///////////MENUS///////////////
 
-    public ArrayList<Episode> loadDoneData() {
-        ArrayList<Episode> a = new ArrayList<>();
-        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
-        Gson gson = new Gson();
-        String json = preferences.getString("Done List", null);
-        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
-        a = gson.fromJson(json, type);
-        if (a == null) a = new ArrayList<Episode>();
-        return a;
-    }
-
-    public ArrayList<Episode> loadPlanData() {
-        ArrayList<Episode> a = new ArrayList<>();
-        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-        Gson gson = new Gson();
-        String json = preferences.getString("Plan List", null);
-        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
-        a = gson.fromJson(json, type);
-        if (a == null) a = new ArrayList<Episode>();
-        return a;
-    }
 
 
     @Override
@@ -408,18 +480,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case R.id.menuURL:
                 try {
-                    if(streamUrl.toLowerCase().contains("anime")) {
-                        try {
-                            Intent openMAL = getPackageManager().getLaunchIntentForPackage("net.myanimelist");
-                            startActivity(openMAL);
-                        } catch (Exception e) {
-                            Intent openStream = new Intent(Intent.ACTION_VIEW, Uri.parse(streamUrl));
-                            startActivity(openStream);
-                        }
-                    } else {
                         Intent openStream = new Intent(Intent.ACTION_VIEW, Uri.parse(streamUrl));
+                        openStream.setPackage("com.hsv.freeadblockerbrowser");
                         startActivity(openStream);
-                    }
+
                 } catch (Exception e) {
                     Toast.makeText(MainActivity.this, "Problem launching streaming url", Toast.LENGTH_SHORT).show();
                     final AlertDialog.Builder builder2 = new AlertDialog.Builder(MainActivity.this);
@@ -431,8 +495,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                     builder2.setMessage("Enter the url of your favorite streaming service");
 
-
-                    //son of a b I hate
                     final EditText input2 = new EditText(MainActivity.this);
                     input2.setInputType(InputType.TYPE_CLASS_TEXT);
                     input2.setEms(10);
@@ -461,6 +523,69 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
 
                 break;
+            case R.id.databaseMenu:
+                AlertDialog.Builder dbConfig = new AlertDialog.Builder(this);
+                dbConfig.setTitle("Database Backup");
+                String location = (dataStorage==1)? "Web Server" : "Localhost (" + localhostIP + ")";
+                dbConfig.setMessage("Last Backup: " +location+ " \n\n" + getBackupTime() + "\n");
+                dbConfig.setPositiveButton("Backup", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                            new DatabaseBackup(MainActivity.this, localhostIP, dataStorage, new DatabaseBackup.AsyncResponse() {
+                                @Override
+                                public void processFinished(boolean result) {
+                                    if (result) {
+                                        Toast.makeText(MainActivity.this, "Data Backup Successful", Toast.LENGTH_SHORT).show();
+                                        setBackupTime();
+                                    } else {
+                                        Toast.makeText(MainActivity.this, "Error Backing up data", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            }).execute(getAllShows());
+                        dialog.dismiss();
+                    }
+                });
+                dbConfig.setNegativeButton("Overwrite", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                            AlertDialog.Builder inner = new AlertDialog.Builder(MainActivity.this);
+                            inner.setTitle("Overwrite?");
+                            inner.setMessage("This will delete all list data and replace it data from database. Continue?");
+                            inner.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                        new DatabaseOverwrite(MainActivity.this, localhostIP, dataStorage, new DatabaseOverwrite.AsyncResponse() {
+                                            @Override
+                                            public void processFinished(ArrayList<Episode> shows) {
+                                                overwriteData(shows);
+                                            }
+                                        }).execute();
+                                    dialog.dismiss();
+                                }
+                            });
+                            inner.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                            AlertDialog rewriteDialog = inner.create();
+                            rewriteDialog.show();
+
+                        dialog.dismiss();
+                    }
+                });
+                dbConfig.setNeutralButton("Host", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startActivity(new Intent(MainActivity.this, Settings.class));
+                    }
+                });
+                AlertDialog dialog1 = dbConfig.create();
+                dialog1.show();
+
+                break;
         }
         return true;
     }
@@ -479,19 +604,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(settingsIntent);
                 break;
             case R.id.drawerKeep:
-                //open keep
-                sideBar.closeDrawers();
+                try {
+                    Intent openMAL = getPackageManager().getLaunchIntentForPackage("net.myanimelist");
+                    startActivity(openMAL);
+                } catch (Exception e) {
+                    Intent animeList = new Intent(Intent.ACTION_VIEW, Uri.parse("https://myanimelist.net/"));
+                    startActivity(animeList);
+                }
 
-                    Intent openBrowser = new Intent(Intent.ACTION_VIEW, Uri.parse("https://keep.google.com"));
-                    if (openBrowser != null) {
-                        try {
-                            startActivity(openBrowser);
-                        } catch (Exception e) {
-                            Toast.makeText(getApplicationContext(), "Unable to Open Keep", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Unable to Open Keep", Toast.LENGTH_SHORT).show();
-                    }
                 break;
             case R.id.drawerFinished:
                 sideBar.closeDrawers();
@@ -507,15 +627,36 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+
+    ///////////ACTIVITY LIFESTYLE HANDLERS//////////////
+
+
+    @Override
+    protected void onStop() {
+        for (int i = 0; i < list.size(); i++) {
+            if(list.get(i).getNotifications()) {
+                setAlarm(list.get(i));
+            } else {
+                cancelAlarm(list.get(i));
+            }
+        }
+        saveAllData(list, planList, doneList);
+        backup();
+
+        SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
+        SharedPreferences.Editor urlEditor = streaming.edit();
+        urlEditor.putString("url", streamUrl);
+        urlEditor.apply();
+
+        super.onStop();
+    }
+
     @Override
         protected void onRestart() {
 
-        EpisodeListAdapter adapter = new EpisodeListAdapter(getApplicationContext(), loadListData(), darkTheme);
+        loadAllData();
 
-        //Preparing Lists
-        list = loadListData();
-        doneList = loadDoneData();
-        planList = loadPlanData();
+        EpisodeListAdapter adapter = new EpisodeListAdapter(getApplicationContext(), list, darkTheme);
 
         episodeList.setAdapter(adapter);
 

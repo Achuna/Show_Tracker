@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
@@ -27,6 +28,7 @@ public class AlarmService extends Service {
     private boolean isRunning;
     private Context context;
     private Thread backgroundThread;
+    private SQLiteHandler database;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -37,6 +39,7 @@ public class AlarmService extends Service {
     public void onCreate() {
         this.context = this;
         this.isRunning = false;
+        database = new SQLiteHandler(context, null, null, 1);
         this.backgroundThread = new Thread(myTask);
 
     }
@@ -46,19 +49,27 @@ public class AlarmService extends Service {
         public void run() {
 
             ArrayList<Episode> list = new ArrayList<>();
-            SharedPreferences preferences = context.getSharedPreferences("Episode List", MODE_PRIVATE);
-            Gson gson = new Gson();
-            String json = preferences.getString("List", null);
-            Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
-            list = gson.fromJson(json, type);
-            if (list == null) list = new ArrayList<Episode>();
+            Cursor data = database.getData();
+            while(data.moveToNext()) {
+                if(data.getInt(10) == 1) {
+                    list.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
+                            new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
+                }
+            }
+
+//            SharedPreferences preferences = context.getSharedPreferences("Episode List", MODE_PRIVATE);
+//            Gson gson = new Gson();
+//            String json = preferences.getString("List", null);
+//            Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
+//            list = gson.fromJson(json, type);
+//            if (list == null) list = new ArrayList<Episode>();
 
 
             //////////////SET ALARMS WHEN DEVICE BOOTS UP//////////
 
             for (int i = 0; i < list.size(); i++) {
 
-                if(list.get(i).notifications) {
+                if(list.get(i).getNotifications()) {
 
                     AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
 

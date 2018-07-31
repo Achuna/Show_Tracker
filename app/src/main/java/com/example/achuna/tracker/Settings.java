@@ -1,9 +1,12 @@
 package com.example.achuna.tracker;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
@@ -12,6 +15,8 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +28,8 @@ public class Settings extends AppCompatActivity {
     ListView colorSwitcher;
     TextView colorText;
     Button settingSaveBtn;
+    RadioGroup radioGroup;
+    RadioButton rbWeb, rbLocal;
 
 
     boolean darkTheme = false;
@@ -38,8 +45,8 @@ public class Settings extends AppCompatActivity {
         darkTheme = theme.getBoolean("Dark Theme", false);
         SharedPreferences getColor = getSharedPreferences("Color", MODE_PRIVATE);
         color = getColor.getString("color", color);
-        if(darkTheme==true) {
-            if(color.equals("Purple")) {
+        if (darkTheme == true) {
+            if (color.equals("Purple")) {
                 setTheme(R.style.purpleDarkTheme);
             } else if (color.equals("Yellow")) {
                 setTheme(R.style.yellowDarkTheme);
@@ -53,7 +60,7 @@ public class Settings extends AppCompatActivity {
                 setTheme(R.style.DarkTheme);
             }
         } else {
-            if(color.equals("Purple")) {
+            if (color.equals("Purple")) {
                 setTheme(R.style.purpleLightTheme);
             } else if (color.equals("Yellow")) {
                 setTheme(R.style.yellowLightTheme);
@@ -78,15 +85,81 @@ public class Settings extends AppCompatActivity {
         colorSwitcher = findViewById(R.id.colorSwitcher);
         settingSaveBtn = findViewById(R.id.settingsSaveBtn);
         colorText = findViewById(R.id.colorText);
+        radioGroup = findViewById(R.id.radioButtonStorageGroup);
+        rbWeb = findViewById(R.id.webServerRB);
+        rbLocal = findViewById(R.id.localHostRB);
 
         darkThemeSwitch.setChecked(darkTheme);
 
 
         SharedPreferences titles = getSharedPreferences("Settings", MODE_PRIVATE);
-
         settingListName.setText(titles.getString("List Title", null));
         settingMainScreenHeader.setText(titles.getString("Header", null));
 
+
+        if (MainActivity.dataStorage == 1) {
+            rbWeb.setChecked(true);
+            rbLocal.setChecked(false);
+        } else {
+            rbLocal.setChecked(true);
+            rbWeb.setChecked(false);
+        }
+
+        rbLocal.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                rbLocal.setChecked(true);
+                rbWeb.setChecked(false);
+
+                final AlertDialog.Builder builder = new AlertDialog.Builder(Settings.this);
+                builder.setTitle("IP Address");
+                if (darkTheme) {
+                    builder.setIcon(R.drawable.lightbulb_outline_white);
+                } else {
+                    builder.setIcon(R.drawable.lightbulb_outline_black);
+                }
+                builder.setMessage("Enter your local IP address");
+
+                final EditText input = new EditText(Settings.this);
+                input.setInputType(InputType.TYPE_CLASS_TEXT);
+                input.setEms(10);
+                input.setHint("Enter IP Address Here");
+                input.setText(MainActivity.localhostIP);
+                builder.setView(input);
+
+                builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        if (input.getText().length() > 0) {
+                            MainActivity.localhostIP = input.getText().toString();
+                            SharedPreferences storage = getSharedPreferences("Storage", MODE_PRIVATE);
+                            SharedPreferences.Editor editor = storage.edit();
+                            editor.putInt("host", 2);
+                            editor.putString("ip", MainActivity.localhostIP);
+                            editor.apply();
+                            dialogInterface.dismiss();
+                        } else {
+                            Toast.makeText(Settings.this, "IP ADDRESS NOT ENTERED", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+        });
+
+        rbWeb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                rbWeb.setChecked(true);
+                rbLocal.setChecked(false);
+                SharedPreferences storage = getSharedPreferences("Storage", MODE_PRIVATE);
+                SharedPreferences.Editor editor = storage.edit();
+                editor.putInt("host", 1);
+                editor.apply();
+            }
+        });
 
         colorText.setText("Current Color: " + color);
 
@@ -125,8 +198,8 @@ public class Settings extends AppCompatActivity {
 
                 saveSettingData();
 
-                MainActivity.listTitle =  settingListName.getText().toString();
-                MainActivity.toolbarTitle =  settingMainScreenHeader.getText().toString();
+                MainActivity.listTitle = settingListName.getText().toString();
+                MainActivity.toolbarTitle = settingMainScreenHeader.getText().toString();
 
                 Intent intent = getIntent();
                 finish();
