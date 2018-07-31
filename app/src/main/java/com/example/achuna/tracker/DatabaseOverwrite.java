@@ -27,13 +27,17 @@ public class DatabaseOverwrite extends AsyncTask<Void, Void, ArrayList<Episode>>
     Context context;
     SQLiteHandler database;
     AsyncResponse delegate = null;
+    String ip;
+    int storage;
 
     public interface AsyncResponse {
         void processFinished(ArrayList<Episode> shows);
     }
 
-    public DatabaseOverwrite(Context context, AsyncResponse delegate) {
+    public DatabaseOverwrite(Context context, String ip, int storage, AsyncResponse delegate) {
         this.context = context;
+        this.ip = ip;
+        this.storage = storage;
         this.delegate = delegate;
         database = new SQLiteHandler(context, null, null, 1);
     }
@@ -41,7 +45,12 @@ public class DatabaseOverwrite extends AsyncTask<Void, Void, ArrayList<Episode>>
     @Override
     protected ArrayList<Episode> doInBackground(Void... params) {
 
-        String url = "http://10.0.2.2/Shows/get.php";
+        String url;
+        if(storage == 1) {
+            url = "http://achunaofonedu.000webhostapp.com/Shows/get.php";
+        } else {
+            url = "http://" + ip + "/Shows/get.php";
+        }
 
         ArrayList<Episode> allShows = new ArrayList<>();
 
@@ -84,16 +93,10 @@ public class DatabaseOverwrite extends AsyncTask<Void, Void, ArrayList<Episode>>
                 if(allShows.size() > 0) database.clearShows();
 
                 return allShows;
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                return new ArrayList<Episode>(0);
             }
 
-
-        return null;
     }
 
     @Override

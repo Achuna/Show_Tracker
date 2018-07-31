@@ -19,6 +19,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
+import javax.net.ssl.HttpsURLConnection;
+
 public class DatabaseBackup extends AsyncTask<ArrayList<DataObject>, Void, Boolean> {
 
     interface AsyncResponse {
@@ -27,16 +29,28 @@ public class DatabaseBackup extends AsyncTask<ArrayList<DataObject>, Void, Boole
 
     Context context;
     AsyncResponse delegate;
+    String ip;
+    int storage;
 
 
-    public DatabaseBackup(Context context, AsyncResponse response) {
+    public DatabaseBackup(Context context, String ip, int storage, AsyncResponse response) {
         this.context = context;
+        this.ip = ip;
+        this.storage = storage;
         this.delegate = response;
     }
 
+
+
     @Override
     protected Boolean doInBackground(ArrayList<DataObject>... params) {
-        String url = "http://10.0.2.2/Shows/update.php";
+
+        String url;
+        if(storage == 1) {
+            url = "http://achunaofonedu.000webhostapp.com/Shows/update.php";
+        } else {
+            url = "http://" + ip + "/Shows/update.php";
+        }
 
         ArrayList<DataObject> shows = params[0];
 
@@ -60,6 +74,7 @@ public class DatabaseBackup extends AsyncTask<ArrayList<DataObject>, Void, Boole
             bufferedWriter.close();
             os.close();
 
+
             InputStream is = httpURLConnection.getInputStream();
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
 
@@ -74,16 +89,12 @@ public class DatabaseBackup extends AsyncTask<ArrayList<DataObject>, Void, Boole
             return response.contains("Success");
 
 
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            return false;
+            //e.printStackTrace();
         }
 
-        return null;
-
     }
-
 
     @Override
     protected void onPostExecute(Boolean result) {

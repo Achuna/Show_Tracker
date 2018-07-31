@@ -69,8 +69,6 @@ public class Done extends AppCompatActivity {
 
         finishedList = findViewById(R.id.finishedList);
 
-        //MainActivity.doneList = loadDoneData();
-
         SimpleListAdapter adapter = new SimpleListAdapter(getApplicationContext(), MainActivity.doneList, darkTheme);
         finishedList.setAdapter(adapter);
 
@@ -141,7 +139,7 @@ public class Done extends AppCompatActivity {
                     MainActivity.doneList.get(i).getTime().getTimePreview(), MainActivity.doneList.get(i).getId(), MainActivity.doneList.get(i).getListId()));
         }
 
-        new DatabaseBackup(Done.this, new DatabaseBackup.AsyncResponse() {
+        new DatabaseBackup(Done.this, MainActivity.localhostIP, MainActivity.dataStorage, new DatabaseBackup.AsyncResponse() {
             @Override
             public void processFinished(boolean result) {
                 if (result) {

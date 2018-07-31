@@ -134,7 +134,7 @@ public class Planning extends AppCompatActivity {
                     MainActivity.doneList.get(i).getTime().getTimePreview(), MainActivity.doneList.get(i).getId(), MainActivity.doneList.get(i).getListId()));
         }
 
-        new DatabaseBackup(Planning.this, new DatabaseBackup.AsyncResponse() {
+        new DatabaseBackup(Planning.this, MainActivity.localhostIP, MainActivity.dataStorage, new DatabaseBackup.AsyncResponse() {
             @Override
             public void processFinished(boolean result) {
                 if (result) {

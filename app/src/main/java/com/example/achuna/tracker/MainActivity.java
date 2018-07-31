@@ -31,6 +31,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.DateFormat;
@@ -64,12 +68,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     String streamUrl = "https://keep.google.com";
     static boolean darkTheme;
     String backupTime = "0 Backups Found";
+    static String localhostIP = "";
+    static int dataStorage = 1; //1: Web server, 2: localhost
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-
-
 
         setUpPreferences();
 
@@ -82,6 +85,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView = findViewById(R.id.nav_view);
 
         setToolbarColors();
+
+        SharedPreferences storage = getSharedPreferences("Storage", MODE_PRIVATE);
+        localhostIP = storage.getString("ip", "");
+        dataStorage = storage.getInt("host", 1);
 
         SharedPreferences backup = getSharedPreferences("Backup Time", MODE_PRIVATE);
         backupTime = backup.getString("time", backupTime);
@@ -123,9 +130,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         adapter = new EpisodeListAdapter(getApplicationContext(), list, darkTheme);
 
-//        list = loadListData();
-//        doneList = loadDoneData();
-//        planList = loadPlanData();
+
 
         episodeList.setAdapter(adapter);
         scheduleAlarms();
@@ -233,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void backup() {
 
-        new DatabaseBackup(MainActivity.this, new DatabaseBackup.AsyncResponse() {
+        new DatabaseBackup(MainActivity.this, localhostIP, dataStorage, new DatabaseBackup.AsyncResponse() {
             @Override
             public void processFinished(boolean result) {
                 if (result) setBackupTime();
@@ -405,76 +410,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-
-
-//    public void saveListData(ArrayList<Episode> a) {
-//        //Converting arraylist into json format
-//        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
-//        SharedPreferences.Editor editor = preferences.edit();
-//        Gson gson = new Gson();
-//        String json = gson.toJson(a);
-//        editor.putString("List", json);
-//        editor.apply();
-//    }
-//
-//    private void saveDoneData() {
-//        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
-//        SharedPreferences.Editor editor = preferences.edit();
-//        Gson gson = new Gson();
-//        String json = gson.toJson(MainActivity.doneList);
-//        editor.putString("Done List", json);
-//        editor.apply();
-//    }
-//
-//    private void saveLaterData() {
-//        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-//        SharedPreferences.Editor editor = preferences.edit();
-//        Gson gson = new Gson();
-//        String json = gson.toJson(MainActivity.planList);
-//        editor.putString("Plan List", json);
-//        editor.apply();
-//    }
-//
-//    /////////////////LOADING LIST DATA//////////////////////
-//
-//    public ArrayList<Episode> loadListData() {
-//        ArrayList<Episode> a = new ArrayList<>();
-//        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
-//        Gson gson = new Gson(); //Using Gson library to make the list data into a string json text
-//        String json = preferences.getString("List", null);
-//        Type type = new TypeToken<ArrayList<Episode>>() {
-//        }.getType();
-//        a = gson.fromJson(json, type);
-//        if (a == null) a = new ArrayList<Episode>();
-//        return a;
-//    }
-//
-//    public ArrayList<Episode> loadDoneData() {
-//        ArrayList<Episode> a = new ArrayList<>();
-//        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
-//        Gson gson = new Gson();
-//        String json = preferences.getString("Done List", null);
-//        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
-//        a = gson.fromJson(json, type);
-//        if (a == null) a = new ArrayList<Episode>();
-//        return a;
-//    }
-//
-//    public ArrayList<Episode> loadPlanData() {
-//        ArrayList<Episode> a = new ArrayList<>();
-//        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-//        Gson gson = new Gson();
-//        String json = preferences.getString("Plan List", null);
-//        Type type = new TypeToken<ArrayList<Episode>>() {}.getType();
-//        a = gson.fromJson(json, type);
-//        if (a == null) a = new ArrayList<Episode>();
-//        return a;
-//    }
-
-
     ///////////MENUS///////////////
-
-
 
 
 
@@ -600,11 +536,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.databaseMenu:
                 AlertDialog.Builder dbConfig = new AlertDialog.Builder(this);
                 dbConfig.setTitle("Database Backup");
-                dbConfig.setMessage("Last Backup: \n\n" + getBackupTime());
-                dbConfig.setPositiveButton("Backup Now", new DialogInterface.OnClickListener() {
+                dbConfig.setMessage("Last Backup: \n\n" + getBackupTime() + "\n");
+                dbConfig.setPositiveButton("Backup", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                            new DatabaseBackup(MainActivity.this, new DatabaseBackup.AsyncResponse() {
+                            new DatabaseBackup(MainActivity.this, localhostIP, dataStorage, new DatabaseBackup.AsyncResponse() {
                                 @Override
                                 public void processFinished(boolean result) {
                                     if (result) {
@@ -618,7 +554,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         dialog.dismiss();
                     }
                 });
-                dbConfig.setNegativeButton("Overwrite Data", new DialogInterface.OnClickListener() {
+                dbConfig.setNegativeButton("Overwrite", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
@@ -628,7 +564,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             inner.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                        new DatabaseOverwrite(MainActivity.this, new DatabaseOverwrite.AsyncResponse() {
+                                        new DatabaseOverwrite(MainActivity.this, localhostIP, dataStorage, new DatabaseOverwrite.AsyncResponse() {
                                             @Override
                                             public void processFinished(ArrayList<Episode> shows) {
                                                 overwriteData(shows);
@@ -647,6 +583,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             rewriteDialog.show();
 
                         dialog.dismiss();
+                    }
+                });
+                dbConfig.setNeutralButton("Host", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startActivity(new Intent(MainActivity.this, Settings.class));
                     }
                 });
                 AlertDialog dialog1 = dbConfig.create();
@@ -712,10 +654,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 cancelAlarm(list.get(i));
             }
         }
-//        saveListData(list);
-//        saveDoneData();
-//        saveLaterData();
-
         saveAllData(list, planList, doneList);
         backup();
 
@@ -729,11 +667,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
         protected void onRestart() {
-
-        //Preparing Lists
-//        list = loadListData();
-//        doneList = loadDoneData();
-//        planList = loadPlanData();
 
         loadAllData();
 

@@ -47,6 +47,7 @@ public class EditorActivity extends Activity {
     Time timePreview = new Time(1, 1, 1, "");
     SQLiteHandler database;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -233,13 +234,7 @@ public class EditorActivity extends Activity {
                         database.updateShow(MainActivity.list.get(listItem));
                         MainActivity.planList.add(MainActivity.list.get(listItem));
                         MainActivity.list.remove(listItem);
-//                        saveData();
-//                        SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-//                        SharedPreferences.Editor editor = preferences.edit();
-//                        Gson gson = new Gson();
-//                        String json = gson.toJson(MainActivity.planList);
-//                        editor.putString("Plan List", json);
-//                        editor.apply();
+
                         saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                         Toast.makeText(getApplicationContext(), "\""+ showName.getText() + "\" added to watch later", Toast.LENGTH_SHORT).show();
                         startActivity(startMain);
@@ -257,12 +252,15 @@ public class EditorActivity extends Activity {
             public void onClick(View view) {
 
 
-                    if (showName.getText().length() == 0 || episodeNumber.getText().length() == 0) {
+                    if (showName.getText().length() == 0 || episodeNumber.getText().length() == 0 || showName.getText().length() > 20) {
                         if(showName.getText().length() == 0 && episodeNumber.getText().length() == 0) {
                             showName.setError("Required Field");
                             episodeNumber.setError("Required Field");
                         }
-                        if (showName.getText().length() == 0) {
+
+                        if(showName.getText().length() > 20) {
+                            showName.setError("Too Long (20 Characters Allowed)");
+                        } else if (showName.getText().length() == 0) {
                             showName.setError("Required Field");
                         } else if (episodeNumber.getText().length() == 0) {
                             episodeNumber.setError("Required Field");
@@ -316,15 +314,6 @@ public class EditorActivity extends Activity {
                                     newShow.setListId(2);
                                     database.updateShow(newShow);
                                     MainActivity.planList.add(newShow);
-//                                    saveData();
-//                                    SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-//                                    SharedPreferences.Editor editor = preferences.edit();
-//                                    Gson gson = new Gson();
-//                                    String json = gson.toJson(MainActivity.planList);
-//                                    editor.putString("Plan List", json);
-//                                    editor.apply();
-//                                    Toast.makeText(getApplicationContext(), "\""+ showName.getText() + "\" added to watch later", Toast.LENGTH_SHORT).show();
-//                                    saveData();
                                     saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                                     startActivity(goBackToMain);
                                 }
@@ -445,8 +434,7 @@ public class EditorActivity extends Activity {
                         database.updateShow(MainActivity.list.get(listItem));
                         MainActivity.doneList.add(MainActivity.list.get(listItem));
                         MainActivity.list.remove(listItem);
-//                        saveDoneData();
-//                        saveData();
+
                         saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                         Intent main = new Intent(getApplicationContext(), MainActivity.class);
                         startActivity(main);
@@ -473,13 +461,7 @@ public class EditorActivity extends Activity {
                 database.updateShow(MainActivity.list.get(listItem));
                 MainActivity.planList.add(MainActivity.list.get(listItem));
                 MainActivity.list.remove(listItem);
-                //saveData();
-//                SharedPreferences preferences = getSharedPreferences("Plan List", MODE_PRIVATE);
-//                SharedPreferences.Editor editor = preferences.edit();
-//                Gson gson = new Gson();
-//                String json = gson.toJson(MainActivity.planList);
-//                editor.putString("Plan List", json);
-//                editor.apply();
+
                 saveAllData(MainActivity.list, MainActivity.planList, MainActivity.doneList);
                 Toast.makeText(getApplicationContext(), "\""+ showName.getText() + "\" added to watch later", Toast.LENGTH_SHORT).show();
                 startActivity(startMain);
@@ -567,23 +549,6 @@ public class EditorActivity extends Activity {
 
     }
 
-//    private void saveData() {
-//        SharedPreferences preferences = getSharedPreferences("Episode List", MODE_PRIVATE);
-//        SharedPreferences.Editor editor = preferences.edit();
-//        Gson gson = new Gson();
-//        String json = gson.toJson(MainActivity.list);
-//        editor.putString("List", json);
-//        editor.apply();
-//    }
-//
-//    private void saveDoneData() {
-//        SharedPreferences preferences = getSharedPreferences("Done List", MODE_PRIVATE);
-//        SharedPreferences.Editor editor = preferences.edit();
-//        Gson gson = new Gson();
-//        String json = gson.toJson(MainActivity.doneList);
-//        editor.putString("Done List", json);
-//        editor.apply();
-//    }
 
     public void backup() {
 
@@ -604,7 +569,7 @@ public class EditorActivity extends Activity {
                     MainActivity.doneList.get(i).getTime().getTimePreview(), MainActivity.doneList.get(i).getId(), MainActivity.doneList.get(i).getListId()));
         }
 
-        new DatabaseBackup(EditorActivity.this, new DatabaseBackup.AsyncResponse() {
+        new DatabaseBackup(EditorActivity.this, MainActivity.localhostIP, MainActivity.dataStorage, new DatabaseBackup.AsyncResponse() {
             @Override
             public void processFinished(boolean result) {
                 if (result) {
@@ -660,10 +625,10 @@ public class EditorActivity extends Activity {
         super.onStop();
     }
 
-    @Override
-    protected void onRestart() {
-        Intent goBack = new Intent(this, MainActivity.class);
-        startActivity(goBack);
-        super.onRestart();
-    }
+//    @Override
+//    protected void onRestart() {
+//        Intent goBack = new Intent(this, MainActivity.class);
+//        startActivity(goBack);
+//        super.onRestart();
+//    }
 }

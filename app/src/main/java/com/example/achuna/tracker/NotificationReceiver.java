@@ -72,15 +72,11 @@ public class NotificationReceiver extends BroadcastReceiver {
         Intent stream = new Intent(Intent.ACTION_VIEW);
 
         stream.setData(Uri.parse(specificUrl));
-        Intent chooser = Intent.createChooser(stream, "Select Browser");
+        stream.setPackage("com.hsv.freeadblockerbrowser");
 
         //stream.putExtra("url", specificUrl); //change to specificUrl to url on deployment
         //stream.putExtra("index", listItem);
-        PendingIntent watchIntent = PendingIntent.getActivity(context, id, chooser, PendingIntent.FLAG_UPDATE_CURRENT);
-
-
-
-
+        PendingIntent watchIntent = PendingIntent.getActivity(context, id, stream, PendingIntent.FLAG_UPDATE_CURRENT);
 
 
 
