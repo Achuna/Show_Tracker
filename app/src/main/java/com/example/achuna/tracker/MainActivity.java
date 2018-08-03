@@ -70,6 +70,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     String backupTime = "0 Backups Found";
     static String localhostIP = "";
     static int dataStorage = 1; //1: Web server, 2: localhost
+    static boolean autoBackup = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         SharedPreferences storage = getSharedPreferences("Storage", MODE_PRIVATE);
         localhostIP = storage.getString("ip", "");
         dataStorage = storage.getInt("host", 1);
+        autoBackup = storage.getBoolean("auto", false);
 
         SharedPreferences backup = getSharedPreferences("Backup Time", MODE_PRIVATE);
         backupTime = backup.getString("time", backupTime);
@@ -237,13 +240,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void backup() {
-
-        new DatabaseBackup(MainActivity.this, localhostIP, dataStorage, new DatabaseBackup.AsyncResponse() {
-            @Override
-            public void processFinished(boolean result) {
-                if (result) setBackupTime();
-            }
-        }).execute(getAllShows());
+        if(autoBackup) {
+            new DatabaseBackup(MainActivity.this, localhostIP, dataStorage, new DatabaseBackup.AsyncResponse() {
+                @Override
+                public void processFinished(boolean result) {
+                    if (result) setBackupTime();
+                }
+            }).execute(getAllShows());
+        }
     }
 
     /**

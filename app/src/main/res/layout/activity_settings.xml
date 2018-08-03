@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="121dp"
+        android:layout_marginTop="142dp"
         android:text="Dark Theme       " />
 
     <EditText
@@ -31,8 +31,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_alignStart="@+id/settingsTitle"
-        android:layout_marginTop="167dp"
+        android:layout_alignStart="@+id/settingsSaveBtn"
+        android:layout_marginTop="184dp"
         android:ems="10"
         android:inputType="textPersonName"
         android:singleLine="true"
@@ -124,6 +124,16 @@
             android:layout_weight="1"
             android:text="Localhost" />
     </RadioGroup>
+
+    <CheckBox
+        android:id="@+id/backupCheckBox"
+        android:layout_width="75dp"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/textView3"
+        android:layout_below="@+id/radioButtonStorageGroup"
+        android:layout_marginStart="3dp"
+        android:text="Auto Backup"
+        android:textSize="10sp" />
 
     <TextView
         android:id="@+id/textView"

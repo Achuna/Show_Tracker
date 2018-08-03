@@ -553,45 +553,47 @@ public class EditorActivity extends Activity {
 
     public void backup() {
 
-        ArrayList<DataObject> shows = new ArrayList<>();
-        for (int i = 0; i < MainActivity.list.size(); i++) {
-            int notifications = (MainActivity.list.get(i).getNotifications())? 1:0;
-            shows.add(new DataObject(MainActivity.list.get(i).getName(), MainActivity.list.get(i).getNumber(), MainActivity.list.get(i).getUrl(), notifications, MainActivity.list.get(i).getTime().getDay(), MainActivity.list.get(i).getTime().getHour(), MainActivity.list.get(i).getTime().getTimeOfDay(),
-                    MainActivity.list.get(i).getTime().getTimePreview(), MainActivity.list.get(i).getId(), MainActivity.list.get(i).getListId()));
-        }
-        for (int i = 0; i < MainActivity.planList.size(); i++) {
-            int notifications = (MainActivity.planList.get(i).getNotifications())? 1:0;
-            shows.add(new DataObject(MainActivity.planList.get(i).getName(), MainActivity.planList.get(i).getNumber(), MainActivity.planList.get(i).getUrl(), notifications, MainActivity.planList.get(i).getTime().getDay(), MainActivity.planList.get(i).getTime().getHour(), MainActivity.planList.get(i).getTime().getTimeOfDay(),
-                    MainActivity.planList.get(i).getTime().getTimePreview(), MainActivity.planList.get(i).getId(), MainActivity.planList.get(i).getListId()));
-        }
-        for (int i = 0; i < MainActivity.doneList.size(); i++) {
-            int notifications = (MainActivity.doneList.get(i).getNotifications())? 1:0;
-            shows.add(new DataObject(MainActivity.doneList.get(i).getName(), MainActivity.doneList.get(i).getNumber(), MainActivity.doneList.get(i).getUrl(), notifications, MainActivity.doneList.get(i).getTime().getDay(), MainActivity.doneList.get(i).getTime().getHour(), MainActivity.doneList.get(i).getTime().getTimeOfDay(),
-                    MainActivity.doneList.get(i).getTime().getTimePreview(), MainActivity.doneList.get(i).getId(), MainActivity.doneList.get(i).getListId()));
-        }
-
-        new DatabaseBackup(EditorActivity.this, MainActivity.localhostIP, MainActivity.dataStorage, new DatabaseBackup.AsyncResponse() {
-            @Override
-            public void processFinished(boolean result) {
-                if (result) {
-                    SharedPreferences backup = getSharedPreferences("Backup Time", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = backup.edit();
-
-                    Calendar calendar = Calendar.getInstance();
-                    String currentDate = DateFormat.getDateInstance().format(calendar.getTime());
-
-                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm a");
-                    String time = simpleDateFormat.format(calendar.getTime());
-
-                    String date = currentDate + " at " + time;
-
-                    editor.putString("time", date);
-                    editor.apply();
-                }
+        if(MainActivity.autoBackup) {
+            ArrayList<DataObject> shows = new ArrayList<>();
+            for (int i = 0; i < MainActivity.list.size(); i++) {
+                int notifications = (MainActivity.list.get(i).getNotifications())? 1:0;
+                shows.add(new DataObject(MainActivity.list.get(i).getName(), MainActivity.list.get(i).getNumber(), MainActivity.list.get(i).getUrl(), notifications, MainActivity.list.get(i).getTime().getDay(), MainActivity.list.get(i).getTime().getHour(), MainActivity.list.get(i).getTime().getTimeOfDay(),
+                        MainActivity.list.get(i).getTime().getTimePreview(), MainActivity.list.get(i).getId(), MainActivity.list.get(i).getListId()));
             }
-        }).execute(shows);
-    }
+            for (int i = 0; i < MainActivity.planList.size(); i++) {
+                int notifications = (MainActivity.planList.get(i).getNotifications())? 1:0;
+                shows.add(new DataObject(MainActivity.planList.get(i).getName(), MainActivity.planList.get(i).getNumber(), MainActivity.planList.get(i).getUrl(), notifications, MainActivity.planList.get(i).getTime().getDay(), MainActivity.planList.get(i).getTime().getHour(), MainActivity.planList.get(i).getTime().getTimeOfDay(),
+                        MainActivity.planList.get(i).getTime().getTimePreview(), MainActivity.planList.get(i).getId(), MainActivity.planList.get(i).getListId()));
+            }
+            for (int i = 0; i < MainActivity.doneList.size(); i++) {
+                int notifications = (MainActivity.doneList.get(i).getNotifications())? 1:0;
+                shows.add(new DataObject(MainActivity.doneList.get(i).getName(), MainActivity.doneList.get(i).getNumber(), MainActivity.doneList.get(i).getUrl(), notifications, MainActivity.doneList.get(i).getTime().getDay(), MainActivity.doneList.get(i).getTime().getHour(), MainActivity.doneList.get(i).getTime().getTimeOfDay(),
+                        MainActivity.doneList.get(i).getTime().getTimePreview(), MainActivity.doneList.get(i).getId(), MainActivity.doneList.get(i).getListId()));
+            }
 
+            new DatabaseBackup(EditorActivity.this, MainActivity.localhostIP, MainActivity.dataStorage, new DatabaseBackup.AsyncResponse() {
+                @Override
+                public void processFinished(boolean result) {
+                    if (result) {
+                        SharedPreferences backup = getSharedPreferences("Backup Time", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = backup.edit();
+
+                        Calendar calendar = Calendar.getInstance();
+                        String currentDate = DateFormat.getDateInstance().format(calendar.getTime());
+
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm a");
+                        String time = simpleDateFormat.format(calendar.getTime());
+
+                        String date = currentDate + " at " + time;
+
+                        editor.putString("time", date);
+                        editor.apply();
+                    }
+                }
+            }).execute(shows);
+        }
+
+    }
 
     public void saveAllData(ArrayList<Episode> a, ArrayList<Episode> b, ArrayList<Episode> c) {
         if (((a.size() + b.size() + c.size()) > 0)) database.clearShows();

@@ -30,6 +30,7 @@ public class Settings extends AppCompatActivity {
     Button settingSaveBtn;
     RadioGroup radioGroup;
     RadioButton rbWeb, rbLocal;
+    CheckBox backupBox;
 
 
     boolean darkTheme = false;
@@ -88,6 +89,7 @@ public class Settings extends AppCompatActivity {
         radioGroup = findViewById(R.id.radioButtonStorageGroup);
         rbWeb = findViewById(R.id.webServerRB);
         rbLocal = findViewById(R.id.localHostRB);
+        backupBox = findViewById(R.id.backupCheckBox);
 
         darkThemeSwitch.setChecked(darkTheme);
 
@@ -97,13 +99,30 @@ public class Settings extends AppCompatActivity {
         settingMainScreenHeader.setText(titles.getString("Header", null));
 
 
-        if (MainActivity.dataStorage == 1) {
+        SharedPreferences storage = getSharedPreferences("Storage", MODE_PRIVATE);
+        if (storage.getInt("host", 1) == 1) {
             rbWeb.setChecked(true);
             rbLocal.setChecked(false);
         } else {
             rbLocal.setChecked(true);
             rbWeb.setChecked(false);
         }
+
+        if (storage.getBoolean("auto", false)) {
+            backupBox.setChecked(true);
+        } else {
+            backupBox.setChecked(false);
+        }
+
+        backupBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                    SharedPreferences storage = getSharedPreferences("Storage", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = storage.edit();
+                    editor.putBoolean("auto", backupBox.isChecked());
+                    editor.apply();
+            }
+        });
 
         rbLocal.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -253,6 +272,18 @@ public class Settings extends AppCompatActivity {
     protected void onStop() {
         saveSettingData();
         super.onStop();
+    }
+
+    @Override
+    protected void onRestart() {
+        if (MainActivity.dataStorage == 1) {
+            rbWeb.setChecked(true);
+            rbLocal.setChecked(false);
+        } else {
+            rbLocal.setChecked(true);
+            rbWeb.setChecked(false);
+        }
+        super.onRestart();
     }
 
     private void saveSettingData() {
