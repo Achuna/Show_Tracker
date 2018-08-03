@@ -34,13 +34,20 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -64,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     static ArrayList<Episode> doneList = new ArrayList<>();
     static ArrayList<Episode> planList = new ArrayList<>();
 
-    static String toolbarTitle = "Tracker",listTitle ="Your Shows",appColor ="Blue";
+    static String toolbarTitle = "Tracker", listTitle = "Your Shows", appColor = "Blue";
     static String streamUrl = "https://otakustream.tv/";
     static boolean darkTheme;
     String backupTime = "0 Backups Found";
@@ -98,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
         streamUrl = streaming.getString("url", streamUrl);
-        
+
         SharedPreferences settings = getSharedPreferences("Titles", MODE_PRIVATE);
         toolbarTitle = settings.getString("header", toolbarTitle);
         listTitle = settings.getString("list title", listTitle);
@@ -134,7 +141,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         adapter = new EpisodeListAdapter(getApplicationContext(), list, darkTheme);
 
 
-
         episodeList.setAdapter(adapter);
         scheduleAlarms();
 
@@ -157,6 +163,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Intent startEditor = new Intent(getApplicationContext(), EditorActivity.class);
                 startEditor.putExtra("Editing", false);
                 startActivity(startEditor);
+            }
+        });
+
+        episodeList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Move Item");
+                builder.setMessage("What position would you like to move \"" + list.get(position).getName() + "\" to?");
+
+                final EditText input = new EditText(MainActivity.this);
+                input.setInputType(InputType.TYPE_CLASS_NUMBER);
+                input.setEms(5);
+                input.setHint("Enter Position Here");
+                builder.setView(input);
+
+                builder.setPositiveButton("Move", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (input.getText().length() > 0 && swap(list, position, Integer.parseInt(input.getText().toString())) != null) {
+                            list = swap(list, position, Integer.parseInt(input.getText().toString()));
+                            adapter.notifyDataSetChanged();
+                        } else {
+                            Toast.makeText(MainActivity.this, "Invalid Position", Toast.LENGTH_SHORT).show();
+                        }
+                        dialog.dismiss();
+                    }
+                });
+
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
+
+                return true;
             }
         });
 
@@ -240,7 +287,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void backup() {
-        if(autoBackup) {
+        if (autoBackup) {
             new DatabaseBackup(MainActivity.this, localhostIP, dataStorage, new DatabaseBackup.AsyncResponse() {
                 @Override
                 public void processFinished(boolean result) {
@@ -250,10 +297,53 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    public ArrayList<Episode> swap(ArrayList<Episode> list, int yourLocation, int swapLocation) {
+
+        ArrayList<Episode> newList = new ArrayList<>();
+        swapLocation--;
+        Episode[] shows = new Episode[list.size() + 1];
+
+        if (swapLocation > list.size() || swapLocation==yourLocation || swapLocation < 0) {
+            return null;
+        } else {
+
+            if(yourLocation > swapLocation) {
+                for (int i = 0; i < list.size(); i++) shows[i] = list.get(i);
+                for (int i = shows.length-1; i > swapLocation; i--) shows[i] = shows[i - 1];
+
+                shows[swapLocation] = shows[yourLocation + 1];
+                Set<Episode> removeDups = new LinkedHashSet<>(Arrays.asList(shows));
+                Iterator<Episode> it = removeDups.iterator();
+
+                while (it.hasNext()) newList.add(it.next());
+                return newList;
+            }
+
+            else {
+                for (int i = 1; i < shows.length; i++) shows[i] = list.get(i-1);
+                for (int i = 0; i < swapLocation + 1; i++) shows[i] = shows[i + 1];
+
+                shows[swapLocation] = shows[yourLocation];
+                newList = new ArrayList<>(Arrays.asList(shows));
+                boolean dupFound = false;
+                for (int i = 0; i < newList.size(); i++) {
+                    for (int j = i+1; j < newList.size(); j++) {
+                        if (newList.get(i).equals(newList.get(j))) {
+                            newList.remove(i);
+                            dupFound = true;
+                            break;
+                        }
+                    }
+                    if (dupFound) break;
+                }
+                return newList;
+            }
+        }
+    }
+
     /**
      * Sets the data and time that the most recent backup was made only if the
      * backup was successful
-     *
      */
     public void setBackupTime() {
         SharedPreferences backup = getSharedPreferences("Backup Time", MODE_PRIVATE);
@@ -279,22 +369,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     /**
      * Returns all shows in a DataObject Format (Easier for JSON to read)
+     *
      * @return
      */
     public ArrayList<DataObject> getAllShows() {
         ArrayList<DataObject> shows = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
-            int notifications = (list.get(i).getNotifications())? 1:0;
+            int notifications = (list.get(i).getNotifications()) ? 1 : 0;
             shows.add(new DataObject(list.get(i).getName(), list.get(i).getNumber(), list.get(i).getUrl(), notifications, list.get(i).getTime().getDay(), list.get(i).getTime().getHour(), list.get(i).getTime().getTimeOfDay(),
                     list.get(i).getTime().getTimePreview(), list.get(i).getId(), list.get(i).getListId()));
         }
         for (int i = 0; i < planList.size(); i++) {
-            int notifications = (planList.get(i).getNotifications())? 1:0;
+            int notifications = (planList.get(i).getNotifications()) ? 1 : 0;
             shows.add(new DataObject(planList.get(i).getName(), planList.get(i).getNumber(), planList.get(i).getUrl(), notifications, planList.get(i).getTime().getDay(), planList.get(i).getTime().getHour(), planList.get(i).getTime().getTimeOfDay(),
                     planList.get(i).getTime().getTimePreview(), planList.get(i).getId(), planList.get(i).getListId()));
         }
         for (int i = 0; i < doneList.size(); i++) {
-            int notifications = (doneList.get(i).getNotifications())? 1:0;
+            int notifications = (doneList.get(i).getNotifications()) ? 1 : 0;
             shows.add(new DataObject(doneList.get(i).getName(), doneList.get(i).getNumber(), doneList.get(i).getUrl(), notifications, doneList.get(i).getTime().getDay(), doneList.get(i).getTime().getHour(), doneList.get(i).getTime().getTimeOfDay(),
                     doneList.get(i).getTime().getTimePreview(), doneList.get(i).getId(), doneList.get(i).getListId()));
         }
@@ -318,7 +409,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         Intent scheduleAlarms = new Intent(getApplicationContext(), ScheduleReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, scheduleAlarms, 0);
-        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(), 1000*60*30, pendingIntent);
+        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(), 1000 * 60 * 30, pendingIntent);
     }
 
     public void setAlarm(Episode show) {
@@ -363,11 +454,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         list.clear();
         planList.clear();
         doneList.clear();
-        while(data.moveToNext()) {
-            if(data.getInt(10) == 1) {
+        while (data.moveToNext()) {
+            if (data.getInt(10) == 1) {
                 list.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
                         new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
-            } else if(data.getInt(10) == 2) {
+            } else if (data.getInt(10) == 2) {
                 planList.add(new Episode(data.getString(1), data.getInt(2), data.getString(3), (data.getInt(4) > 0),
                         new Time(data.getInt(5), data.getInt(6), data.getInt(7), data.getString(8)), data.getInt(9), data.getInt(10)));
             } else {
@@ -378,7 +469,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void saveAllData(ArrayList<Episode> a, ArrayList<Episode> b, ArrayList<Episode> c) {
-       if (((a.size() + b.size() + c.size()) > 0)) database.clearShows();
+        if (((a.size() + b.size() + c.size()) > 0)) database.clearShows();
         for (int i = 0; i < a.size(); i++) {
             database.addShow(a.get(i));
         }
@@ -417,7 +508,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ///////////MENUS///////////////
 
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -425,14 +515,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    
-    
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
         if (sideBarToggle.onOptionsItemSelected(item))
             return true;
-        
+
         switch (item.getItemId()) {
             case R.id.menuSettings:
                 Intent settingsIntent = new Intent(getApplicationContext(), Settings.class);
@@ -480,13 +569,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 AlertDialog dialog = builder.create();
                 dialog.show();
-                
+
                 break;
             case R.id.menuURL:
                 try {
-                        Intent openStream = new Intent(Intent.ACTION_VIEW, Uri.parse(streamUrl));
-                        openStream.setPackage("com.hsv.freeadblockerbrowser");
-                        startActivity(openStream);
+                    Intent openStream = new Intent(Intent.ACTION_VIEW, Uri.parse(streamUrl));
+                    openStream.setPackage("com.hsv.freeadblockerbrowser");
+                    startActivity(openStream);
 
                 } catch (Exception e) {
                     Toast.makeText(MainActivity.this, "Problem launching streaming url", Toast.LENGTH_SHORT).show();
@@ -530,22 +619,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.databaseMenu:
                 AlertDialog.Builder dbConfig = new AlertDialog.Builder(this);
                 dbConfig.setTitle("Database Backup");
-                String location = (dataStorage==1)? "Web Server" : "Localhost (" + localhostIP + ")";
-                dbConfig.setMessage("Last Backup: " +location+ " \n\n" + getBackupTime() + "\n");
+                String location = (dataStorage == 1) ? "Web Server" : "Localhost (" + localhostIP + ")";
+                dbConfig.setMessage("Last Backup: " + location + " \n\n" + getBackupTime() + "\n");
                 dbConfig.setPositiveButton("Backup", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                            new DatabaseBackup(MainActivity.this, localhostIP, dataStorage, new DatabaseBackup.AsyncResponse() {
-                                @Override
-                                public void processFinished(boolean result) {
-                                    if (result) {
-                                        Toast.makeText(MainActivity.this, "Data Backup Successful", Toast.LENGTH_SHORT).show();
-                                        setBackupTime();
-                                    } else {
-                                        Toast.makeText(MainActivity.this, "Error Backing up data", Toast.LENGTH_SHORT).show();
-                                    }
+                        new DatabaseBackup(MainActivity.this, localhostIP, dataStorage, new DatabaseBackup.AsyncResponse() {
+                            @Override
+                            public void processFinished(boolean result) {
+                                if (result) {
+                                    Toast.makeText(MainActivity.this, "Data Backup Successful", Toast.LENGTH_SHORT).show();
+                                    setBackupTime();
+                                } else {
+                                    Toast.makeText(MainActivity.this, "Error Backing up data", Toast.LENGTH_SHORT).show();
                                 }
-                            }).execute(getAllShows());
+                            }
+                        }).execute(getAllShows());
                         dialog.dismiss();
                     }
                 });
@@ -553,29 +642,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
-                            AlertDialog.Builder inner = new AlertDialog.Builder(MainActivity.this);
-                            inner.setTitle("Overwrite?");
-                            inner.setMessage("This will delete all list data and replace it data from database. Continue?");
-                            inner.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                        new DatabaseOverwrite(MainActivity.this, localhostIP, dataStorage, new DatabaseOverwrite.AsyncResponse() {
-                                            @Override
-                                            public void processFinished(ArrayList<Episode> shows) {
-                                                overwriteData(shows);
-                                            }
-                                        }).execute();
-                                    dialog.dismiss();
-                                }
-                            });
-                            inner.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                }
-                            });
-                            AlertDialog rewriteDialog = inner.create();
-                            rewriteDialog.show();
+                        AlertDialog.Builder inner = new AlertDialog.Builder(MainActivity.this);
+                        inner.setTitle("Overwrite?");
+                        inner.setMessage("This will delete all list data and replace it data from database. Continue?");
+                        inner.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                new DatabaseOverwrite(MainActivity.this, localhostIP, dataStorage, new DatabaseOverwrite.AsyncResponse() {
+                                    @Override
+                                    public void processFinished(ArrayList<Episode> shows) {
+                                        overwriteData(shows);
+                                    }
+                                }).execute();
+                                dialog.dismiss();
+                            }
+                        });
+                        inner.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                        AlertDialog rewriteDialog = inner.create();
+                        rewriteDialog.show();
 
                         dialog.dismiss();
                     }
@@ -638,7 +727,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onStop() {
         for (int i = 0; i < list.size(); i++) {
-            if(list.get(i).getNotifications()) {
+            if (list.get(i).getNotifications()) {
                 setAlarm(list.get(i));
             } else {
                 cancelAlarm(list.get(i));
@@ -656,7 +745,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-        protected void onRestart() {
+    protected void onRestart() {
 
         loadAllData();
 
