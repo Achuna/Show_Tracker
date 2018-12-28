@@ -140,8 +140,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         adapter = new EpisodeListAdapter(getApplicationContext(), list, darkTheme);
 
-
         episodeList.setAdapter(adapter);
+
+        DatabaseChanges();
+
         scheduleAlarms();
 
         /////////////////////EVENT HANDLERS//////////////////////
@@ -286,6 +288,79 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    public void DatabaseChanges() {
+
+        //true means everything is ok
+        new DatabaseCheckup(MainActivity.this, localhostIP, dataStorage, new DatabaseCheckup.AsyncResponse() {
+            @Override
+            public void processFinished(boolean changes) {
+               if (!changes) {
+                   //Create dialougue
+                   AlertDialog.Builder dbConfig = new AlertDialog.Builder(MainActivity.this);
+                   dbConfig.setTitle("Database Sync");
+                   String location = (dataStorage == 1) ? "Web Server" : "Localhost (" + localhostIP + ")";
+                   dbConfig.setMessage("Changes have been found\n\nLast Backup: " + location + " \n" + getBackupTime() + "\n");
+                   dbConfig.setNegativeButton("Backup", new DialogInterface.OnClickListener() {
+                       @Override
+                       public void onClick(DialogInterface dialog, int which) {
+                           new DatabaseBackup(MainActivity.this, localhostIP, dataStorage, new DatabaseBackup.AsyncResponse() {
+                               @Override
+                               public void processFinished(boolean result) {
+                                   if (result) {
+                                       Toast.makeText(MainActivity.this, "Data Backup Successful", Toast.LENGTH_SHORT).show();
+                                       setBackupTime();
+                                   } else {
+                                       Toast.makeText(MainActivity.this, "Error Backing up data", Toast.LENGTH_SHORT).show();
+                                   }
+                               }
+                           }).execute(getAllShows());
+                           dialog.dismiss();
+                       }
+                   });
+                   dbConfig.setPositiveButton("Sync", new DialogInterface.OnClickListener() {
+                       @Override
+                       public void onClick(DialogInterface dialog, int which) {
+
+                           AlertDialog.Builder inner = new AlertDialog.Builder(MainActivity.this);
+                           inner.setTitle("Overwrite & Sync?");
+                           inner.setMessage("This will delete all list data and replace it data from database. Continue?");
+                           inner.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                               @Override
+                               public void onClick(DialogInterface dialog, int which) {
+                                   new DatabaseOverwrite(MainActivity.this, localhostIP, dataStorage, new DatabaseOverwrite.AsyncResponse() {
+                                       @Override
+                                       public void processFinished(ArrayList<Episode> shows) {
+                                           overwriteData(shows);
+                                       }
+                                   }).execute();
+                                   dialog.dismiss();
+                               }
+                           });
+                           inner.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                               @Override
+                               public void onClick(DialogInterface dialog, int which) {
+                                   dialog.dismiss();
+                               }
+                           });
+                           AlertDialog rewriteDialog = inner.create();
+                           rewriteDialog.show();
+
+                           dialog.dismiss();
+                       }
+                   });
+                   dbConfig.setNeutralButton("Host", new DialogInterface.OnClickListener() {
+                       @Override
+                       public void onClick(DialogInterface dialog, int which) {
+                           startActivity(new Intent(MainActivity.this, Settings.class));
+                       }
+                   });
+                   AlertDialog dialog1 = dbConfig.create();
+                   dialog1.show();
+               }
+            }
+        }).execute();
+    }
+
     public void backup() {
         if (autoBackup) {
             new DatabaseBackup(MainActivity.this, localhostIP, dataStorage, new DatabaseBackup.AsyncResponse() {
@@ -323,7 +398,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 for (int i = 1; i < shows.length; i++) shows[i] = list.get(i-1);
                 for (int i = 0; i < swapLocation + 1; i++) shows[i] = shows[i + 1];
 
-                shows[swapLocation] = shows[yourLocation];
+                shows[swapLocation+1] = shows[yourLocation];
                 newList = new ArrayList<>(Arrays.asList(shows));
                 boolean dupFound = false;
                 for (int i = 0; i < newList.size(); i++) {
@@ -733,8 +808,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 cancelAlarm(list.get(i));
             }
         }
-        saveAllData(list, planList, doneList);
-        backup();
+
+        if(list.size() > 0) {
+            saveAllData(list, planList, doneList);
+            backup();
+        }
 
         SharedPreferences streaming = getSharedPreferences("Stream URL", MODE_PRIVATE);
         SharedPreferences.Editor urlEditor = streaming.edit();

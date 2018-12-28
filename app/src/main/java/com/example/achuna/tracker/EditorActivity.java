@@ -253,15 +253,12 @@ public class EditorActivity extends Activity {
             public void onClick(View view) {
 
 
-                    if (showName.getText().length() == 0 || episodeNumber.getText().length() == 0 || showName.getText().length() > 20) {
+                    if (showName.getText().length() == 0 || episodeNumber.getText().length() == 0) {
                         if(showName.getText().length() == 0 && episodeNumber.getText().length() == 0) {
                             showName.setError("Required Field");
                             episodeNumber.setError("Required Field");
                         }
-
-                        if(showName.getText().length() > 20) {
-                            showName.setError("Too Long (20 Characters Allowed)");
-                        } else if (showName.getText().length() == 0) {
+                        if (showName.getText().length() == 0) {
                             showName.setError("Required Field");
                         } else if (episodeNumber.getText().length() == 0) {
                             episodeNumber.setError("Required Field");
@@ -386,6 +383,8 @@ public class EditorActivity extends Activity {
                         clipboard.setPrimaryClip(clip);
                         Toast.makeText(getApplicationContext(), "URL Copied", Toast.LENGTH_SHORT).show();
 
+                        MainActivity.list.get(listItem).setNumber(episode + 1);
+                        database.updateShow(MainActivity.list.get(listItem));
 
                         Intent stream = new Intent(Intent.ACTION_VIEW);
                         stream.setData(Uri.parse(specificUrl));
@@ -628,10 +627,10 @@ public class EditorActivity extends Activity {
         super.onStop();
     }
 
-//    @Override
-//    protected void onRestart() {
-//        Intent goBack = new Intent(this, MainActivity.class);
-//        startActivity(goBack);
-//        super.onRestart();
-//    }
+    @Override
+    protected void onRestart() {
+        Intent goBack = new Intent(this, MainActivity.class);
+        startActivity(goBack);
+        super.onRestart();
+    }
 }
