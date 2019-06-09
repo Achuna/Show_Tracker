@@ -2,10 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.achuna.tracker">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.SET_ALARM" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -17,37 +18,43 @@
 
         <!-- Activities -->
 
-        <activity android:name=".MainActivity"
+        <activity
+            android:name=".MainActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".EditorActivity"
-            android:screenOrientation="portrait"/>
+        <activity
+            android:name=".EditorActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".Settings"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
-        <activity android:name=".Done"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Planning"
-            android:screenOrientation="portrait"/>
+        <activity
+            android:name=".Done"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Planning"
+            android:screenOrientation="portrait" />
 
         <!-- Receivers and Services -->
 
         <receiver android:name=".NotificationReceiver" />
-        <receiver android:name=".ScheduleReceiver"/>
-        <service android:name=".AlarmService"/>
+        <receiver android:name=".ScheduleReceiver" />
 
-        <receiver android:name=".BootReceiver"
+        <service android:name=".AlarmService" />
+
+        <receiver
+            android:name=".BootReceiver"
             android:enabled="true">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-
     </application>
 
 </manifest>

@@ -94,7 +94,7 @@ public class AlarmService extends Service {
                     if (diff > 0) {
                         alarmManager.cancel(pendingIntent);
                     } else {
-                        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), weeklyInterval, pendingIntent);
+                        alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
 
                     }
                 }

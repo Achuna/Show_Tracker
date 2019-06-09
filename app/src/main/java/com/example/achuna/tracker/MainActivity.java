@@ -11,6 +11,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -331,6 +332,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                        @Override
                                        public void processFinished(ArrayList<Episode> shows) {
                                            overwriteData(shows);
+                                           adapter.notifyDataSetChanged();
+                                           onRestart();
                                        }
                                    }).execute();
                                    dialog.dismiss();
@@ -514,7 +517,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             alarmManager.cancel(pendingIntent);
             //calendar.add(Calendar.DAY_OF_YEAR, 1); //Avoid firing when save button is clicked
         } else {
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), weeklyInterval, pendingIntent);
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
             //Toast.makeText(getApplicationContext(), "Item: " + MainActivity.list.indexOf(show) + "\nDay: "+show.getTime().getDay() + " Hour: "+show.getTime().getHour()+"", Toast.LENGTH_LONG).show();
             // alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
         }
@@ -713,7 +716,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         dialog.dismiss();
                     }
                 });
-                dbConfig.setNegativeButton("Overwrite", new DialogInterface.OnClickListener() {
+                dbConfig.setNegativeButton("Sync", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
@@ -727,6 +730,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     @Override
                                     public void processFinished(ArrayList<Episode> shows) {
                                         overwriteData(shows);
+                                        adapter.notifyDataSetChanged();
                                     }
                                 }).execute();
                                 dialog.dismiss();
@@ -744,10 +748,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         dialog.dismiss();
                     }
                 });
-                dbConfig.setNeutralButton("Host", new DialogInterface.OnClickListener() {
+                dbConfig.setNeutralButton("Refresh", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        startActivity(new Intent(MainActivity.this, Settings.class));
+                        //startActivity(new Intent(MainActivity.this, Settings.class));
+                        onRestart();
                     }
                 });
                 AlertDialog dialog1 = dbConfig.create();
@@ -824,8 +829,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onRestart() {
+        super.onRestart();
 
         loadAllData();
+
+        DatabaseChanges();
 
         EpisodeListAdapter adapter = new EpisodeListAdapter(getApplicationContext(), list, darkTheme);
 
@@ -835,6 +843,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         for (int i = 0; i < size; i++) {
             navigationView.getMenu().getItem(i).setChecked(false);
         }
-        super.onRestart();
+
+
     }
 }
