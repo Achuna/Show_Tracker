@@ -383,7 +383,7 @@ public class EditorActivity extends Activity {
                         clipboard.setPrimaryClip(clip);
                         Toast.makeText(getApplicationContext(), "URL Copied", Toast.LENGTH_SHORT).show();
 
-                        MainActivity.list.get(listItem).setNumber(episode + 1);
+                        MainActivity.list.get(listItem).setNumber(episode); //Increment episode on list not needed anymore
                         database.updateShow(MainActivity.list.get(listItem));
 
                         Intent stream = new Intent(Intent.ACTION_VIEW);

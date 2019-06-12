@@ -21,6 +21,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -803,6 +804,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     ///////////ACTIVITY LIFESTYLE HANDLERS//////////////
 
+//    public void onBackPressed() {
+//        finish();
+//    }
 
     @Override
     protected void onStop() {
