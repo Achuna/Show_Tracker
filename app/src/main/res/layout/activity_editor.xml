@@ -12,16 +12,17 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="12dp"
-        android:text="Information"
+        android:text="Show Information"
         android:textSize="23sp" />
 
     <EditText
         android:id="@+id/showNameEt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/dayList"
         android:layout_below="@+id/textView2"
-        android:layout_marginTop="55dp"
+        android:layout_alignStart="@+id/dayList"
+        android:layout_marginStart="2dp"
+        android:layout_marginTop="92dp"
         android:ems="15"
         android:hint="Name of Show"
         android:inputType="textPersonName" />
@@ -39,8 +40,8 @@
 
     <CheckBox
         android:id="@+id/notifyCheckbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="153dp"
+        android:layout_height="50dp"
         android:layout_below="@+id/urlText"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="14dp"
@@ -75,23 +76,26 @@
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@+id/deleteButton"
         android:layout_alignBottom="@+id/deleteButton"
+        android:layout_marginStart="2dp"
+        android:layout_marginBottom="5dp"
         android:layout_toEndOf="@+id/notifyCheckbox"
         android:background="@android:color/transparent"
         android:drawableBottom="@drawable/check_black"
         android:text="Mark As Done\n"
         android:textSize="10sp"
-        android:windowSoftInputMode="adjustNothing"
-        android:visibility="invisible" />
+        android:visibility="invisible"
+        android:windowSoftInputMode="adjustNothing" />
 
     <Button
         android:id="@+id/editorSaveBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="224dp"
+        android:layout_height="58dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="26dp"
-        android:windowSoftInputMode="adjustNothing"
-        android:text="Save" />
+        android:layout_marginBottom="18dp"
+        android:text="Save"
+        android:textSize="18sp"
+        android:windowSoftInputMode="adjustNothing" />
 
     <EditText
         android:id="@+id/urlText"
@@ -109,10 +113,13 @@
     <Button
         android:id="@+id/planToWatchButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/editorSaveBtn"
+        android:layout_height="67dp"
+        android:layout_below="@+id/atDivider"
         android:layout_alignStart="@+id/editorSaveBtn"
-        android:layout_marginBottom="9dp"
+        android:layout_alignBottom="@+id/editorSaveBtn"
+        android:layout_marginStart="69dp"
+        android:layout_marginTop="78dp"
+        android:layout_marginBottom="73dp"
         android:background="@android:color/transparent"
         android:drawableBottom="@drawable/lightbulb_outline_black"
         android:text="Watch Later\n"
@@ -146,13 +153,16 @@
 
     <Button
         android:id="@+id/watchNow"
-        android:layout_width="100dp"
-        android:layout_height="40dp"
+        android:layout_width="169dp"
+        android:layout_height="62dp"
         android:layout_below="@+id/textView2"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="8dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="118dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="123dp"
         android:text="Watch Now"
-        android:textSize="10sp" />
+        android:textSize="14sp" />
 
     <TextView
         android:id="@+id/atDivider"
