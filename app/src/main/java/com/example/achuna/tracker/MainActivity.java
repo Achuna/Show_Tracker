@@ -517,8 +517,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             alarmManager.cancel(pendingIntent);
             //calendar.add(Calendar.DAY_OF_YEAR, 1); //Avoid firing when save button is clicked
         } else {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-            //Toast.makeText(getApplicationContext(), "Item: " + MainActivity.list.indexOf(show) + "\nDay: "+show.getTime().getDay() + " Hour: "+show.getTime().getHour()+"", Toast.LENGTH_LONG).show();
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), weeklyInterval, pendingIntent);
+            //Toast.makeText(getApplicationContext(), "Item: " + MainActivity.list.indexOf(show)  ",\nDay: "+show.getTime().getDay() + " Hour: "+show.getTime().getHour()+"", Toast.LENGTH_LONG).show();
             // alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
         }
     }

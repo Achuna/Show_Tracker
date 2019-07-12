@@ -1,6 +1,8 @@
 package com.example.achuna.tracker;
 
+import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -11,7 +13,9 @@ import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.webkit.URLUtil;
@@ -25,6 +29,7 @@ import static android.content.Context.CLIPBOARD_SERVICE;
 
 public class NotificationReceiver extends BroadcastReceiver {
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onReceive(Context context, Intent intent) {
 
@@ -78,11 +83,27 @@ public class NotificationReceiver extends BroadcastReceiver {
         //stream.putExtra("index", listItem);
         PendingIntent watchIntent = PendingIntent.getActivity(context, id, stream, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        ///////////////////Create Notification Channel for Android O and above (REQUIRED)/////////////////
+
+        String cid = "MY_Channel";
+        String ctitle = "Achuna's Notification Channel";
+
+
+        NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        NotificationChannel mChannel = mNotificationManager.getNotificationChannel(cid);
+
+            mChannel = new NotificationChannel(cid, ctitle, NotificationManager.IMPORTANCE_HIGH);
+            mChannel.enableVibration(true);
+            mChannel.setVibrationPattern(new long[]{0, 350, 350});
+        mNotificationManager.createNotificationChannel(mChannel);
+
+        mNotificationManager.createNotificationChannel(mChannel);
 
 
         ///////////////Build Notification/////////////
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, cid);
 
         builder.setContentIntent(pendingIntent);
 
